@@ -71,7 +71,7 @@ const Input: React.FC<InputProps> = ({
           >
             {inputType === "password" ? (
               <svg
-                className="h-5 w-5 translate-y-3 text-bgPowderBlue outline-none"
+                className="h-5 w-5 translate-y-3 text-powderBlue outline-none"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -84,7 +84,7 @@ const Input: React.FC<InputProps> = ({
               </svg>
             ) : (
               <svg
-                className="h-5 w-5 translate-y-3 text-bgPowderBlue outline-none"
+                className="h-5 w-5 translate-y-3 text-powderBlue outline-none"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

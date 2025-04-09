@@ -10,7 +10,7 @@ interface WithAuthProps {
   excludePaths?: string[];
 }
 
-export default function WithAuth({ children, excludePaths = ['/login', '/signup'] }: WithAuthProps) {
+export default function WithAuth({ children, excludePaths = ['/login', '/signup', '/otp'] }: WithAuthProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);

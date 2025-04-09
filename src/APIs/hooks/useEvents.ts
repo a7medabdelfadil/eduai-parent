@@ -1,5 +1,5 @@
 import { useMutation, type UseMutationOptions, useQuery, type UseQueryOptions } from "@tanstack/react-query";
-import { addAttendance, fetchUpcomingEvents, removeAttendance } from "../features/events";
+import { addAttendance, fetchStudentUpcomingEvents, fetchUpcomingEvents, removeAttendance } from "../features/events";
 import { type EventsResponse } from "../../types";
 import { type AxiosError } from "axios";
 
@@ -7,6 +7,20 @@ export const useUpcomingEvents = (options?: UseQueryOptions<EventsResponse, Erro
   return useQuery<EventsResponse, Error>({
     queryKey: ["upcoming-events"],
     queryFn: fetchUpcomingEvents,
+    ...options,
+  });
+};
+
+export const useStudentUpcomingEvents = (studentId?: string, options?: UseQueryOptions<any, Error>) => {
+  return useQuery<any, Error>({
+    queryKey: ["studentUpcoming-events", studentId],
+    queryFn: () => {
+      if (!studentId) {
+        return Promise.resolve(null);
+      }
+      return fetchStudentUpcomingEvents(studentId);
+    },
+    enabled: !!studentId,
     ...options,
   });
 };

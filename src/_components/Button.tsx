@@ -54,7 +54,7 @@ const Button = ({
     color === "error"
       ? "bg-error text-white hover:bg-errorHover"
       : color === "secondary"
-      ? "bg-bgPowderBlue text-white hover:bg-textSecondary"
+      ? "bg-powderBlue text-white hover:bg-textSecondary"
       : "bg-primary text-white hover:bg-primaryHover";
 
   const themeClassName =

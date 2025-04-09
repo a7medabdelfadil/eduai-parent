@@ -15,7 +15,7 @@ export default {
         primary: "rgba(var(--primary))",
         primaryHover: "rgba(42, 65, 192)", 
         bgSecondary: "rgba(var(--bg-secondary))",
-        bgPowderBlue: "rgba(var(--bg-powder-blue))",
+        powderBlue: "rgba(var(--powder-blue))",
         bgGray: "rgba(var(--bg-gray))",
         bgPrimary: "rgba(var(--bg-primary))",
         textPrimary: "rgba(var(--text-primary))",

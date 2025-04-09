@@ -13,6 +13,30 @@ export const fetchAllUpcomingExams = async (): Promise<Upcoming_Previous_Exams> 
     );
     return response.data;
 };
+export const getGPA = async (studentId: string): Promise<any> => {
+    const response = await axiosInstance.get<any>(
+        `/api/v1/student/progress/gpa-comparison-ForParent?studentId=${studentId}`
+    );
+    return response.data;
+};
+export const getAttendance = async (studentId: string): Promise<any> => {
+    const response = await axiosInstance.get<any>(
+        `/api/v1/student/progress/attendanceForParent?studentId=${studentId}`
+    );
+    return response.data;
+};
+export const getDailyPlan = async (studentId: string): Promise<any> => {
+    const response = await axiosInstance.get<any>(
+        `/api/v1/daily-exam/parent/daily-plan-percentage/${studentId}`
+    );
+    return response.data;
+};
+export const getStudentById = async (studentId: string): Promise<any> => {
+    const response = await axiosInstance.get<any>(
+        `/api/v1/management/student/${studentId}/update`
+    );
+    return response.data;
+};
 export const fetchAllPreviousExams = async (): Promise<Upcoming_Previous_Exams> => {
     const response = await axiosInstance.get<Upcoming_Previous_Exams>(
         `/api/v1/academic/educationalAffairs/exams/previous`

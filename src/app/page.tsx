@@ -1,10 +1,8 @@
 "use client";
 import Container from "~/_components/Container";
 import {
-  FaEllipsisH,
   FaRegComment,
   FaRegHeart,
-  FaPaperPlane,
 } from "react-icons/fa";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { IoSend } from "react-icons/io5";
@@ -29,6 +27,8 @@ import {
 } from "~/APIs/hooks/useEvents";
 import { useGetAllPosts, useLikePost } from "~/APIs/hooks/usePost";
 import Image from "next/image";
+import ImageComponent from "~/_components/ImageSrc";
+import useLanguageStore from "~/APIs/store";
 
 export default function Home() {
   const {
@@ -40,23 +40,48 @@ export default function Home() {
 
   const { mutate: addAttendance } = useAddAttendance({
     onSuccess: () => {
-      toast.success("Attendance confirmed successfully!");
+      toast.success(
+        language === "ar"
+          ? "تم تأكيد الحضور بنجاح!"
+          : language === "fr"
+            ? "Présence confirmée avec succès!"
+            : "Attendance confirmed successfully!"
+      );
       void refetchEvents();
     },
     onError: () => {
-      toast.error("Error confirmed attendance!");
+      toast.error(
+        language === "ar"
+          ? "خطأ في تأكيد الحضور!"
+          : language === "fr"
+            ? "Erreur lors de la confirmation de la présence!"
+            : "Error confirming attendance!"
+      );
     },
   });
 
   const { mutate: removeAttendance } = useRemoveAttendance({
     onSuccess: () => {
-      toast.success("Attendance removed successfully!");
+      toast.success(
+        language === "ar"
+          ? "تم إزالة الحضور بنجاح!"
+          : language === "fr"
+            ? "Présence supprimée avec succès!"
+            : "Attendance removed successfully!"
+      );
       void refetchEvents();
     },
     onError: () => {
-      toast.success("Error remove attendance!");
+      toast.error(
+        language === "ar"
+          ? "خطأ في إزالة الحضور!"
+          : language === "fr"
+            ? "Erreur lors de la suppression de la présence!"
+            : "Error removing attendance!"
+      );
     },
   });
+
 
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [comment, setComment] = useState("");
@@ -82,6 +107,7 @@ export default function Home() {
 
     return { todayEvents, upcomingEvents };
   };
+  const language = useLanguageStore((state) => state.language);
 
   useEffect(() => {
     if (dataEvents?.data?.content) {
@@ -92,6 +118,10 @@ export default function Home() {
       setUpcomingEvents(upcomingEvents);
     }
   }, [dataEvents]);
+
+  const translate = (en: string, fr: string, ar: string) => {
+    return language === "fr" ? fr : language === "ar" ? ar : en;
+  };
 
   const {
     data: comments,
@@ -165,7 +195,7 @@ export default function Home() {
 
   return (
     <Container>
-      <div className="m-4 mb-4 flex flex-col items-start justify-between gap-4 md:flex-row">
+      <div className="m-4 mb-4 flex flex-col items-start justify-between gap-4 md:flex-row" dir={language === "ar" ? "rtl" : "ltr"}>
         <div className="flex w-full flex-col gap-4">
           {dataPosts?.data.content.map((post) => (
             <div key={post.id} className="w-full rounded-xl bg-bgPrimary p-4">
@@ -195,39 +225,45 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-2 font-extrabold">
-                    <FaEllipsisH size={20} />
+
                   </div>
                 </div>
                 <Text className="m-2">{post.content}</Text>
                 <div className="mt-4">
                   {post?.attachments?.length > 0 && (
                     <div
-                      className={`grid gap-4 ${
-                        post?.attachments?.length === 1
+                      className={`grid gap-4 ${post?.attachments?.length === 1
                           ? "grid-cols-1"
                           : post?.attachments?.length === 2
                             ? "grid-cols-2"
                             : "grid-cols-2 md:grid-cols-3"
-                      }`}
+                        }`}
                     >
                       {" "}
                       {post.attachments.slice(0, 6).map((attachment, index) => (
                         <div key={index} className="relative">
-                          <Image
-                            priority
-                            unoptimized
+                          <ImageComponent
                             src={attachment.viewLink}
-                            alt={`Post Image ${index + 1}`}
-                            width={500}
-                            height={500}
+                            fallbackSrc="/images/noImage.png"
+                            aspectRatio="aspect-video"
+                            objectFit="cover"
+                            priority={true}
+                            key={index} 
                             className="h-full w-full rounded-md object-cover"
+                            alt={`Post Image ${index + 1}`}
+                            onLoadingComplete={() => console.log('Image loaded')}
+                            onError={(error) => console.error('Image failed to load:', error)}
                           />
                         </div>
                       ))}
                       {post.attachments.length > 6 && (
                         <div className="relative flex items-center justify-center rounded-md bg-gray-200">
                           <Text font="bold" size="lg" className="text-primary">
-                            +{post.attachments.length - 6} more
+                            +{post.attachments.length - 6}  {language === "ar"
+                              ? "المزيد"
+                              : language === "fr"
+                                ? "plus"
+                                : "more"}
                           </Text>
                         </div>
                       )}
@@ -263,15 +299,13 @@ export default function Home() {
                     <FaRegComment size={20} />
                     <Text size={"xs"}>{post?.commentsCount}</Text>
                   </button>
-                  <FaPaperPlane size={20} />
                 </div>
 
                 {selectedPostId === post.id && (
                   <div className="my-4 ml-4">
                     {isLoadingComments ? (
                       <div className="flex justify-center py-4">
-                        {/* <Spinner /> */}
-                        loading
+                        <Spinner />
                       </div>
                     ) : (
                       <>
@@ -298,7 +332,11 @@ export default function Home() {
 
                         {comments?.data.content.length === 0 && (
                           <Text color="gray" className="py-4 text-center">
-                            No comments yet
+                            {language === "ar"
+                              ? "لا توجد تعليقات حتى الآن"
+                              : language === "fr"
+                                ? "Pas encore de commentaires"
+                                : "No comments yet"}
                           </Text>
                         )}
                       </>
@@ -309,7 +347,13 @@ export default function Home() {
                       <Input
                         border="gray"
                         theme="comment"
-                        placeholder="Add comment..."
+                        placeholder={
+                          language === "ar"
+                            ? "أضف تعليقًا..."
+                            : language === "fr"
+                              ? "Ajouter un commentaire..."
+                              : "Add comment..."
+                        }
                         type="comment"
                         value={comment} // Set the input value to the state
                         onChange={(e) => setComment(e.target.value)} // Update state on input change
@@ -329,8 +373,13 @@ export default function Home() {
         <div className="w-full rounded-md bg-bgPrimary p-4 md:w-1/2">
           <div>
             <Text font="bold" size="2xl">
-              Today&apos;s Events
+              {language === "ar"
+                ? "فعاليات اليوم"
+                : language === "fr"
+                  ? "Événements d'aujourd'hui"
+                  : "Today's Events"}
             </Text>
+
             {todayEvents.length > 0 ? (
               todayEvents.map((event) => (
                 <div
@@ -351,7 +400,7 @@ export default function Home() {
                             {new Date(event.startDate).toLocaleTimeString()} -{" "}
                             {Math.abs(
                               new Date(event.endDate).getTime() -
-                                new Date(event.startDate).getTime(),
+                              new Date(event.startDate).getTime(),
                             ) /
                               (1000 * 60)}{" "}
                             Min
@@ -359,7 +408,7 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex justify-between p-4">
+                      <div className="flex justify-between p-4 overflow-auto">
                         <div>
                           <Text>{event.title}</Text>
                           <Text color="gray">{event.description}</Text>
@@ -372,7 +421,11 @@ export default function Home() {
                               }
                               color="secondary"
                             >
-                              Attendance Confirmed
+                              {language === "ar"
+                                ? "تم تأكيد الحضور"
+                                : language === "fr"
+                                  ? "Présence confirmée"
+                                  : "Attendance Confirmed"}
                             </Button>
                           ) : (
                             <Button
@@ -380,7 +433,11 @@ export default function Home() {
                                 handleConfirmAttendance(event.id.toString())
                               }
                             >
-                              Confirm Attendance
+                              {language === "ar"
+                                ? "تأكيد الحضور"
+                                : language === "fr"
+                                  ? "Confirmer la présence"
+                                  : "Confirm Attendance"}
                             </Button>
                           )}
                         </div>
@@ -390,13 +447,19 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              <Text color="gray" font={"semiBold"} size={"lg"} className="m-2">No events scheduled for today.</Text>
+              <Text color="gray" font="semiBold" size="lg" className="m-2">
+                {language === "ar"
+                  ? "لا توجد فعاليات مجدولة لليوم."
+                  : language === "fr"
+                    ? "Aucun événement prévu pour aujourd'hui."
+                    : "No events scheduled for today."}
+              </Text>
             )}
           </div>
 
           <div className="my-2">
             <Text font="bold" size="2xl">
-              Upcoming Events
+              {translate("Upcoming Events", "Événements à venir", "الأحداث القادمة")}
             </Text>
             {upcomingEvents.length > 0 ? (
               upcomingEvents.map((event) => (
@@ -418,7 +481,7 @@ export default function Home() {
                         {new Date(event.startDate).toLocaleTimeString()} -{" "}
                         {Math.abs(
                           new Date(event.endDate).getTime() -
-                            new Date(event.startDate).getTime(),
+                          new Date(event.startDate).getTime(),
                         ) /
                           (1000 * 60)}{" "}
                         Min
@@ -434,28 +497,40 @@ export default function Home() {
                     <div>
                       {event.isAttendee ? (
                         <Button
-                          onClick={() =>
-                            handleRemoveAttendance(event.id.toString())
-                          }
+                          onClick={() => handleRemoveAttendance(event.id.toString())}
                           color="secondary"
                         >
-                          Attendance Confirmed
+                          {language === "ar"
+                            ? "تم تأكيد الحضور"
+                            : language === "fr"
+                              ? "Présence confirmée"
+                              : "Attendance Confirmed"}
                         </Button>
                       ) : (
                         <Button
-                          onClick={() =>
-                            handleConfirmAttendance(event.id.toString())
-                          }
+                          onClick={() => handleConfirmAttendance(event.id.toString())}
                         >
-                          Confirm Attendance
+                          {language === "ar"
+                            ? "تأكيد الحضور"
+                            : language === "fr"
+                              ? "Confirmer la présence"
+                              : "Confirm Attendance"}
                         </Button>
+
                       )}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <Text color="gray" font={"semiBold"} size={"lg"} className="m-2">No upcoming events scheduled.</Text>
+              <Text color="gray" font="semiBold" size="lg" className="m-2">
+                {language === "ar"
+                  ? "لا توجد فعاليات قادمة مجدولة."
+                  : language === "fr"
+                    ? "Aucun événement à venir programmé."
+                    : "No upcoming events scheduled."}
+              </Text>
+
             )}
           </div>
         </div>

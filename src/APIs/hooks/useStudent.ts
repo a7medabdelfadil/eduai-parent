@@ -1,5 +1,5 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { ParentStudentsResponse, StudentsResponse, StudentsWithGradesResponse } from "~/types";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { type ParentStudentsResponse, type StudentsResponse, type StudentsWithGradesResponse } from "~/types";
 import { fetchStudentTeachers, getStudents, getStudentsSimpleData, getStudentsWithGrades } from "../features/student";
 
 export const useGetStudents = (
