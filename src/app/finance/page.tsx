@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Skeleton } from "~/components/ui/Skeleton";
 
 const Finance = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
@@ -33,7 +34,7 @@ const Finance = () => {
         return 0;
       })
     : [];
-    const language = useLanguageStore((state) => state.language);
+  const language = useLanguageStore((state) => state.language);
 
   return (
     <Container>
@@ -43,20 +44,24 @@ const Finance = () => {
           value={selectedStudent ?? ""}
           onValueChange={setSelectedStudent}
         >
-          <SelectTrigger className={`w-full border border-borderPrimary bg-bgPrimary`}>
-            <SelectValue placeholder={
-              language === 'fr'
-                ? 'Sélectionner un étudiant'
-                : language === 'ar'
-                ? 'اختر الطالب'
-                : 'Select Student'
-            } />
+          <SelectTrigger
+            className={`w-full border border-borderPrimary bg-bgPrimary`}
+          >
+            <SelectValue
+              placeholder={
+                language === "fr"
+                  ? "Sélectionner un étudiant"
+                  : language === "ar"
+                    ? "اختر الطالب"
+                    : "Select Student"
+              }
+            />
           </SelectTrigger>
           {students?.data?.length && (
             <SelectContent>
               {students?.data?.map((student: any) => (
                 <SelectItem
-                className="hover:bg-bgSecondary"
+                  className="hover:bg-bgSecondary"
                   key={student.studentId}
                   value={student.studentId.toString()}
                 >
@@ -69,30 +74,26 @@ const Finance = () => {
       </div>
       <div className="w-full overflow-x-auto rounded-md bg-bgPrimary p-4">
         <Text font={"bold"} size={"4xl"}>
-          {language === 'fr'
-            ? 'Finance'
-            : language === 'ar'
-            ? 'المالية'
-            : 'Finance'}
+          {language === "fr"
+            ? "Finance"
+            : language === "ar"
+              ? "المالية"
+              : "Finance"}
         </Text>
         <div className="my-4">
           <div className="ml-4 flex items-center gap-2 text-primary">
             <div className="h-1 w-1 bg-primary"></div>
             <Text font={"bold"} size={"2xl"} color={"primary"}>
-              {language === 'fr'
-                ? 'Non payé / Pas complètement payé'
-                : language === 'ar'
-                ? 'غير مدفوع / لم يكتمل الدفع'
-                : 'Unpaid / Not Fully Paid'}
+              {language === "fr"
+                ? "Non payé / Pas complètement payé"
+                : language === "ar"
+                  ? "غير مدفوع / لم يكتمل الدفع"
+                  : "Unpaid / Not Fully Paid"}
             </Text>
           </div>
           <div className="mt-4">
             {isFees ? (
-              <div className="flex w-full justify-center">
-                <Spinner />
-              </div>
-            ) : (
-              <table className="w-full">
+                <table className="w-full">
                 <thead>
                   <tr>
                     <th className="px-4 py-2 text-left">{language === 'fr' ? 'Nom du semestre' : language === 'ar' ? 'اسم الفصل الدراسي' : 'Semester Name'}</th>
@@ -102,6 +103,68 @@ const Finance = () => {
                     <th className="px-4 py-2 text-left">{language === 'fr' ? 'Devise des frais' : language === 'ar' ? 'عملة الرسوم' : 'Fees Currency'}</th>
                     <th className="px-4 py-2 text-left">{language === 'fr' ? 'Statut du paiement' : language === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
                     <th className="px-4 py-2 text-left">{language === 'fr' ? 'Montant total des frais' : language === 'ar' ? 'إجمالي لمبلغ الرسوم' : 'Total Fees Amount'}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(2)].map((_, index) => (
+                    <FinanceRowSkeleton key={index} />
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Nom du semestre"
+                        : language === "ar"
+                          ? "اسم الفصل الدراسي"
+                          : "Semester Name"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Date limite"
+                        : language === "ar"
+                          ? "تاريخ الاستحقاق"
+                          : "Due Date"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Montant de la réduction"
+                        : language === "ar"
+                          ? "مبلغ الخصم"
+                          : "Discount Amount"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Montant payé"
+                        : language === "ar"
+                          ? "المبلغ المدفوع"
+                          : "Paid Amount"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Devise des frais"
+                        : language === "ar"
+                          ? "عملة الرسوم"
+                          : "Fees Currency"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Statut du paiement"
+                        : language === "ar"
+                          ? "حالة الدفع"
+                          : "Payment Status"}
+                    </th>
+                    <th className="px-4 py-2 text-left">
+                      {language === "fr"
+                        ? "Montant total des frais"
+                        : language === "ar"
+                          ? "إجمالي لمبلغ الرسوم"
+                          : "Total Fees Amount"}
+                    </th>
                     <th></th>
                   </tr>
                 </thead>
@@ -118,7 +181,7 @@ const Finance = () => {
                         className="overflow-hidden rounded-md bg-bgSecondary shadow"
                       >
                         <td className="rounded-l-md px-4 py-2">
-                          {fee.semesterName} 
+                          {fee.semesterName}
                         </td>
                         <td className="px-4 py-2">{fee.dueDate}</td>
                         <td className="px-4 py-2">{fee.discountAmount}</td>
@@ -132,7 +195,11 @@ const Finance = () => {
                             as="link"
                             href={`/finance/payment/${fee.invoiceId}`}
                           >
-                            {language === 'fr' ? 'Payer les frais' : language === 'ar' ? 'دفع الرسوم' : 'Pay Fees'}
+                            {language === "fr"
+                              ? "Payer les frais"
+                              : language === "ar"
+                                ? "دفع الرسوم"
+                                : "Pay Fees"}
                           </Button>
                         </td>
                       </tr>
@@ -146,20 +213,66 @@ const Finance = () => {
           <div className="ml-4 flex items-center gap-2 text-success">
             <div className="h-1 w-1 bg-success"></div>
             <div className="text-xl">
-              {language === 'fr' ? 'Payé' : language === 'ar' ? 'مدفوع' : 'Paid'}
+              {language === "fr"
+                ? "Payé"
+                : language === "ar"
+                  ? "مدفوع"
+                  : "Paid"}
             </div>
           </div>
           <div className="mt-4">
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Nom du semestre' : language === 'ar' ? 'اسم الفصل الدراسي' : 'Semester Name'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Date limite' : language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Montant de la réduction' : language === 'ar' ? 'مبلغ الخصم' : 'Discount Amount'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Montant payé' : language === 'ar' ? 'المبلغ المدفوع' : 'Paid Amount'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Devise des frais' : language === 'ar' ? 'عملة الرسوم' : 'Fees Currency'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Statut du paiement' : language === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
-                  <th className="px-4 py-2 text-left">{language === 'fr' ? 'Montant total des frais' : language === 'ar' ? 'إجمالي لمبلغ الرسوم' : 'Total Fees Amount'}</th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Nom du semestre"
+                      : language === "ar"
+                        ? "اسم الفصل الدراسي"
+                        : "Semester Name"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Date limite"
+                      : language === "ar"
+                        ? "تاريخ الاستحقاق"
+                        : "Due Date"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Montant de la réduction"
+                      : language === "ar"
+                        ? "مبلغ الخصم"
+                        : "Discount Amount"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Montant payé"
+                      : language === "ar"
+                        ? "المبلغ المدفوع"
+                        : "Paid Amount"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Devise des frais"
+                      : language === "ar"
+                        ? "عملة الرسوم"
+                        : "Fees Currency"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Statut du paiement"
+                      : language === "ar"
+                        ? "حالة الدفع"
+                        : "Payment Status"}
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    {language === "fr"
+                      ? "Montant total des frais"
+                      : language === "ar"
+                        ? "إجمالي لمبلغ الرسوم"
+                        : "Total Fees Amount"}
+                  </th>
                   <th></th>
                 </tr>
               </thead>
@@ -174,7 +287,7 @@ const Finance = () => {
                       className="overflow-hidden rounded-md bg-bgSecondary shadow"
                     >
                       <td className="rounded-l-md px-4 py-2">
-                        {fee.semesterName} 
+                        {fee.semesterName}
                       </td>
                       <td className="px-4 py-2">{fee.dueDate}</td>
                       <td className="px-4 py-2">{fee.discountAmount}</td>
@@ -184,7 +297,11 @@ const Finance = () => {
                       <td className="px-4 py-2">{fee.totalFeesAmount}</td>
                       <td className="rounded-r-md px-4 py-2">
                         <Button color="secondary" as="link" href="/finance/">
-                          {language === 'fr' ? 'Détails' : language === 'ar' ? 'التفاصيل' : 'Details'}
+                          {language === "fr"
+                            ? "Détails"
+                            : language === "ar"
+                              ? "التفاصيل"
+                              : "Details"}
                         </Button>
                       </td>
                     </tr>
@@ -195,8 +312,22 @@ const Finance = () => {
         </div>
       </div>
     </Container>
-
   );
 };
 
 export default Finance;
+
+function FinanceRowSkeleton() {
+  return (
+    <tr className="overflow-hidden rounded-md bg-bgSecondary shadow">
+      {[...Array(7)].map((_, index) => (
+        <td key={index} className="px-4 py-3">
+          <Skeleton className="h-4 w-24" />
+        </td>
+      ))}
+      <td className="px-4 py-2">
+        <Skeleton className="h-9 w-24 rounded-md" />
+      </td>
+    </tr>
+  );
+}
