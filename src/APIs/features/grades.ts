@@ -9,6 +9,7 @@ export const fetchStudents = async (): Promise<any> => {
     const response = await axiosInstance.get<any>(`/api/v1/parent/students`);
     return response.data;
   };
+
 export const fetchSemesterByYear = async (academicYearId: string): Promise<any> => {
     const response = await axiosInstance.get<any>(`/api/v1/student-study/Semesters?academicYearId=${academicYearId}`);
     return response.data;

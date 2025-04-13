@@ -63,7 +63,7 @@ const Button = ({
         ? "text-error border border-error bg-transparent"
         : color === "secondary"
         ? "text-secondary-500 border border-secondary-500 bg-transparent hover:bg-secondary-200"
-        : "text-primary border border-primary bg-transparent hover:bg-primary hover:text-white"
+        : "text-primary border border-primary bg-transparent"
       : colorClassName;
 
   const computedClassName = `${baseClassName} ${themeClassName} ${

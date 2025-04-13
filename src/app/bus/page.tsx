@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Client, type Frame, type Message } from '@stomp/stompjs';
-import { MapContainer, TileLayer, Popup, Marker, Polyline } from 'react-leaflet';
-import { MapPin, Bus as BusIcon } from 'lucide-react';
-import { divIcon } from 'leaflet';
-import { renderToString } from 'react-dom/server';
-import Cookies from 'js-cookie';
-import { baseUrlStock } from '~/APIs/axios';
-import useLanguageStore from '~/APIs/store';
-import Container from '~/_components/Container';
-import 'leaflet/dist/leaflet.css';
-import polyline from '@mapbox/polyline';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Client, type Frame, type Message } from "@stomp/stompjs";
+import {
+  MapContainer,
+  TileLayer,
+  Popup,
+  Marker,
+  Polyline,
+} from "react-leaflet";
+import { MapPin, Bus as BusIcon } from "lucide-react";
+import { divIcon } from "leaflet";
+import { renderToString } from "react-dom/server";
+import Cookies from "js-cookie";
+import { baseUrlStock } from "~/APIs/axios";
+import useLanguageStore, { useStudentStore } from "~/APIs/store";
+import Container from "~/_components/Container";
+import "leaflet/dist/leaflet.css";
+import polyline from "@mapbox/polyline";
+import { useRouter } from "next/navigation";
+import { useStudentBusId } from "~/APIs/hooks/useBus";
+import Spinner from "~/_components/Spinner";
+import StudentSelector from "~/_components/StudentSelector";
 
 // ============================
 // Type Definitions
@@ -39,13 +49,13 @@ const createCustomMarkerIcon = (color: string) => {
   const iconHtml = renderToString(
     <div className="relative">
       <MapPin size={32} color={color} fill={color} fillOpacity={0.2} />
-      <div className="absolute bottom-0 left-1/2 w-px h-px bg-transparent" />
-    </div>
+      <div className="absolute bottom-0 left-1/2 h-px w-px bg-transparent" />
+    </div>,
   );
 
   return divIcon({
     html: iconHtml,
-    className: 'custom-marker',
+    className: "custom-marker",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -32],
@@ -56,15 +66,18 @@ const createCustomMarkerIcon = (color: string) => {
 // Bus Component
 // ============================
 const Bus: React.FC = () => {
+
   // STOMP connection and location states
   const [connected, setConnected] = useState<boolean>(false);
   const [busId, setBusId] = useState<string>("1");
   const [busLocation, setBusLocation] = useState<[number, number] | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<
+    [number, number] | null
+  >(null);
   const [routePoints, setRoutePoints] = useState<Array<[number, number]>>([]);
   const [stompClient, setStompClient] = useState<Client | null>(null);
 
-  const token = Cookies.get('token');
+  const token = Cookies.get("token");
   const language = useLanguageStore((state) => state.language);
 
   // ----------------------------
@@ -74,15 +87,24 @@ const Bus: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
-          console.log("Current location:", position.coords.latitude, position.coords.longitude);
+          setCurrentLocation([
+            position.coords.latitude,
+            position.coords.longitude,
+          ]);
+          console.log(
+            "Current location:",
+            position.coords.latitude,
+            position.coords.longitude,
+          );
         },
         (error) => {
           console.error("Error getting current location:", error);
-        }
+        },
       );
     } else {
-      console.error("Geolocation is not supported by this browser.");
+      console.error(
+        "Geolocation isuseStudentBusId not supported by this browser.",
+      );
     }
   }, []);
 
@@ -100,7 +122,7 @@ const Bus: React.FC = () => {
 
     client.onConnect = (frame: Frame) => {
       setConnected(true);
-      console.log('Connected:', frame);
+      console.log("Connected:", frame);
 
       try {
         client.subscribe(`/topic/bus-location/${busId}`, (message: Message) => {
@@ -116,16 +138,16 @@ const Bus: React.FC = () => {
           console.log("Received bus location:", data.latitude, data.longitude);
         });
       } catch (error) {
-        console.error('Error in subscription:', error);
+        console.error("Error in subscription:", error);
       }
     };
 
     client.onWebSocketError = (error: Event) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     };
 
     client.onStompError = (frame: Frame) => {
-      console.error('Broker error:', frame.headers.message, frame.body);
+      console.error("Broker error:", frame.headers.message, frame.body);
     };
 
     setStompClient(client);
@@ -146,7 +168,7 @@ const Bus: React.FC = () => {
 
     const fetchRoute = async () => {
       // API key and URL for LocationIQ Directions API
-      const apiKey = 'pk.d807ad8f5a3c9654c978548059f91986';
+      const apiKey = "pk.d807ad8f5a3c9654c978548059f91986";
       const [startLat, startLng] = currentLocation;
       const [destLat, destLng] = busLocation;
       const url = `https://us1.locationiq.com/v1/directions/driving/${startLng},${startLat};${destLng},${destLat}?key=${apiKey}&geometries=polyline`;
@@ -160,10 +182,11 @@ const Bus: React.FC = () => {
         // Decode the polyline string into an array of [lat, lng] points
         const decodedPoints: [number, number][] = polyline
           .decode(polylineString)
-          .filter((point: number[]): point is [number, number] => 
-            point.length >= 2 && 
-            typeof point[0] === 'number' && 
-            typeof point[1] === 'number'
+          .filter(
+            (point: number[]): point is [number, number] =>
+              point.length >= 2 &&
+              typeof point[0] === "number" &&
+              typeof point[1] === "number",
           );
         setRoutePoints(decodedPoints);
         console.log(`Route updated with ${decodedPoints.length} points.`);
@@ -197,55 +220,61 @@ const Bus: React.FC = () => {
   // 5. Render the Map
   // ----------------------------
   // Use current location if available; otherwise fall back to a default
-  const defaultPosition: [number, number] = currentLocation || [29.261243, -9.873053];
+  const defaultPosition: [number, number] = currentLocation || [
+    29.261243, -9.873053,
+  ];
 
   return (
     <Container>
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="bg-bgPrimary rounded-lg shadow-lg p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <BusIcon className="w-8 h-8 text-blue-600" />
+      <div className="mx-auto max-w-7xl p-6">
+        <div className="rounded-lg bg-bgPrimary p-6 shadow-lg">
+          <div className="mb-6 flex items-center gap-3">
+            <BusIcon className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-textSecondary">
-              {language === 'fr'
-                ? 'Suivi de localisation des bus'
-                : language === 'ar'
-                ? 'تعقب موقع الحافلة'
-                : 'Bus Location Tracker'}
+              {language === "fr"
+                ? "Suivi de localisation des bus"
+                : language === "ar"
+                  ? "تعقب موقع الحافلة"
+                  : "Bus Location Tracker"}
             </h1>
           </div>
 
           <div className="mb-6 space-x-4">
             <button
-              className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                connected 
-                  ? 'bg-bgSecondary cursor-not-allowed' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
+                connected
+                  ? "cursor-not-allowed bg-bgSecondary"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
               }`}
               onClick={connect}
               disabled={connected}
             >
-              <div className={`w-2 h-2 rounded-full ${connected ? 'bg-gray-400' : 'bg-green-400'}`} />
-              {language === 'fr'
-                ? 'Connecter'
-                : language === 'ar'
-                ? 'توصيل'
-                : 'Connect'}
+              <div
+                className={`h-2 w-2 rounded-full ${connected ? "bg-gray-400" : "bg-green-400"}`}
+              />
+              {language === "fr"
+                ? "Connecter"
+                : language === "ar"
+                  ? "توصيل"
+                  : "Connect"}
             </button>
             <button
-              className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                !connected 
-                  ? 'bg-bgSecondary cursor-not-allowed' 
-                  : 'bg-red-500 hover:bg-red-600 text-white'
+              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
+                !connected
+                  ? "cursor-not-allowed bg-bgSecondary"
+                  : "bg-red-500 text-white hover:bg-red-600"
               }`}
               onClick={disconnect}
               disabled={!connected}
             >
-              <div className={`w-2 h-2 rounded-full ${!connected ? 'bg-gray-400' : 'bg-red-400'}`} />
-              {language === 'fr'
-                ? 'Déconnecter'
-                : language === 'ar'
-                ? 'فصل'
-                : 'Disconnect'}
+              <div
+                className={`h-2 w-2 rounded-full ${!connected ? "bg-gray-400" : "bg-red-400"}`}
+              />
+              {language === "fr"
+                ? "Déconnecter"
+                : language === "ar"
+                  ? "فصل"
+                  : "Disconnect"}
             </button>
           </div>
 
@@ -255,19 +284,23 @@ const Bus: React.FC = () => {
               type="text"
               value={busId}
               onChange={(e) => setBusId(e.target.value)}
-              className="w-full border border-borderPrimary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-borderPrimary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder={
-                language === 'fr'
+                language === "fr"
                   ? "Entrez l'ID du bus"
-                  : language === 'ar'
-                  ? 'أدخل معرف الحافلة'
-                  : 'Enter Bus ID'
+                  : language === "ar"
+                    ? "أدخل معرف الحافلة"
+                    : "Enter Bus ID"
               }
             />
           </div>
 
-          <div className="h-96 rounded-lg overflow-hidden border border-gray-300">
-            <MapContainer center={defaultPosition} zoom={15} className="h-full w-full">
+          <div className="h-96 overflow-hidden rounded-lg border border-gray-300">
+            <MapContainer
+              center={defaultPosition}
+              zoom={15}
+              className="h-full w-full"
+            >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -280,26 +313,32 @@ const Bus: React.FC = () => {
 
               {/* Marker for the user's current location */}
               {currentLocation && (
-                <Marker position={currentLocation} icon={createCustomMarkerIcon('#00ff00')}>
+                <Marker
+                  position={currentLocation}
+                  icon={createCustomMarkerIcon("#00ff00")}
+                >
                   <Popup>
-                    {language === 'fr'
-                      ? 'Votre position'
-                      : language === 'ar'
-                      ? 'موقعك'
-                      : 'Your Location'}
+                    {language === "fr"
+                      ? "Votre position"
+                      : language === "ar"
+                        ? "موقعك"
+                        : "Your Location"}
                   </Popup>
                 </Marker>
               )}
 
               {/* Marker for the bus location */}
               {busLocation && (
-                <Marker position={busLocation} icon={createCustomMarkerIcon('#ff0000')}>
+                <Marker
+                  position={busLocation}
+                  icon={createCustomMarkerIcon("#ff0000")}
+                >
                   <Popup>
-                    {language === 'fr'
-                      ? 'Localisation du bus'
-                      : language === 'ar'
-                      ? 'موقع الحافلة'
-                      : 'Bus Location'}
+                    {language === "fr"
+                      ? "Localisation du bus"
+                      : language === "ar"
+                        ? "موقع الحافلة"
+                        : "Bus Location"}
                   </Popup>
                 </Marker>
               )}

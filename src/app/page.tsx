@@ -181,27 +181,6 @@ export default function Home() {
     removeAttendance(eventId);
     void refetchEvents();
   };
-  // if (isLoading || isEventsLoading)
-  //   return (
-  //     <Container>
-  //       <div
-  //         className="m-4 mb-4 flex flex-col items-start justify-between gap-4 md:flex-row"
-  //         dir={language === "ar" ? "rtl" : "ltr"}
-  //       >
-  //         <div className="flex w-full flex-col gap-4">
-  //           {[...Array(3)].map((_, index) => (
-  //             <PostSkeleton key={index} />
-  //           ))}
-  //         </div>
-
-  //         <div className="w-full rounded-md bg-bgPrimary p-4 md:w-1/2">
-  //           {[...Array(2)].map((_, index) => (
-  //             <EventCardSkeleton key={index} />
-  //           ))}
-  //         </div>
-  //       </div>
-  //     </Container>
-  //   );
 
   return (
     <Container>

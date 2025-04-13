@@ -1,85 +1,101 @@
 import { create } from "zustand";
-import { persist } from 'zustand/middleware'
+import { persist } from "zustand/middleware";
 
 // Boolean value
 type BooleanState = {
-    boolean: boolean;
-    toggle: () => void;
-}
+  boolean: boolean;
+  toggle: () => void;
+};
 
 export const useBooleanValue = create<BooleanState>((set) => ({
-    boolean: true,
-    toggle: () => {
-        set((state: BooleanState) => ({ boolean: !state.boolean }))
-    }
-}))
+  boolean: true,
+  toggle: () => {
+    set((state: BooleanState) => ({ boolean: !state.boolean }));
+  },
+}));
 
 // User data
 type UserData = {
-    username: string;
-    email: string;
-    name_en: string;
-    id: string;
-    picture: string;
-}
+  username: string;
+  email: string;
+  name_en: string;
+  id: string;
+  picture: string;
+};
 
 type UserDataState = {
-    userData: UserData;
-    setUserData: (data: Partial<UserData>) => void;
-    clearUserData: () => void;
-}
+  userData: UserData;
+  setUserData: (data: Partial<UserData>) => void;
+  clearUserData: () => void;
+};
 
 export const useUserDataStore = create<UserDataState>((set) => ({
+  userData: {
+    username: "",
+    email: "",
+    name_en: "",
+    id: "",
+    picture: "",
+  },
 
-    userData: {
-        username: '',
-        email: '',
-        name_en: '',
-        id: '',
-        picture: ''
-    },
+  setUserData: (data) => {
+    set((state) => ({
+      userData: {
+        ...state.userData,
+        ...data,
+      },
+    }));
+  },
 
-    setUserData: (data) => {
-        set((state) => ({
-            userData: {
-                ...state.userData,
-                ...data
-            }
-        }))
-    },
-
-    clearUserData: () => {
-        set(() => ({
-            userData: {
-                username: '',
-                email: '',
-                name_en: '',
-                id: '',
-                picture: '',
-            }
-        }))
-    }
-}))
+  clearUserData: () => {
+    set(() => ({
+      userData: {
+        username: "",
+        email: "",
+        name_en: "",
+        id: "",
+        picture: "",
+      },
+    }));
+  },
+}));
 
 //
 interface LanguageState {
+  language: string;
 
-    language: string;
-  
-    setLanguage: (language: string) => void;
-  
-  }
+  setLanguage: (language: string) => void;
+}
 
 const useLanguageStore = create(
   persist<LanguageState>(
     (set) => ({
-      language: 'en',
+      language: "en",
       setLanguage: (newLanguage: string) => set({ language: newLanguage }),
     }),
     {
-      name: 'language-storage',
-    }
-  )
-)
+      name: "language-storage",
+    },
+  ),
+);
 
-export default useLanguageStore
+export default useLanguageStore;
+
+// Selected student
+
+interface StudentStoreState {
+    selectedStudentId: string;
+    setSelectedStudentId: (id: string) => void;
+  }
+  
+  export const useStudentStore = create(
+    persist<StudentStoreState>(
+      (set) => ({
+        selectedStudentId: "",
+        setSelectedStudentId: (id) => set({ selectedStudentId: id }),
+      }),
+      {
+        name: "selected-student", 
+      }
+    )
+  );

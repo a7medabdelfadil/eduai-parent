@@ -1,3 +1,5 @@
+'use client";'
+
 import type { ReactNode } from "react";
 import useLanguageStore, { useBooleanValue } from "~/APIs/store";
 import { cn } from "~/lib/utils";
