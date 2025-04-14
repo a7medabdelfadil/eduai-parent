@@ -41,6 +41,16 @@ type BusSubscriptionRequest = {
   };
 };
 
+export type BusInfo = {
+  driverName: string;
+  busNumber: string;
+  speed: number;
+  phoneNumber: {
+    countryCode: number;
+    nationalNumber: string;
+  };
+};
+
 export const fetchAllRegions = async (): Promise<Region[]> => {
   const response = await axiosInstance.get<RegionResponse>(`/api/v1/location/public/region`);
   return response.data.data;
@@ -69,4 +79,12 @@ export const fetchStudentBusId = async (studentId: string): Promise<string> => {
 
 export const fetchSubscribeStudentToBus = async (data: BusSubscriptionRequest): Promise<void> => {
   await axiosInstance.post(`/api/v1/bus-subscription/student`, data);
+};
+
+export const fetchBusInfo = async (busId: number): Promise<BusInfo> => {
+  const response = await axiosInstance.get<{ data: BusInfo }>(
+    `/api/v1/bus/bus-info`,
+    { params: { busId } }
+  );
+  return response.data.data;
 };

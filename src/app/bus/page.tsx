@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Client, type Frame, type Message } from "@stomp/stompjs";
 import {
   MapContainer,
@@ -8,20 +8,21 @@ import {
   Popup,
   Marker,
   Polyline,
+  useMap,
 } from "react-leaflet";
 import { MapPin, Bus as BusIcon } from "lucide-react";
 import { divIcon } from "leaflet";
 import { renderToString } from "react-dom/server";
 import Cookies from "js-cookie";
 import { baseUrlStock } from "~/APIs/axios";
-import useLanguageStore, { useStudentStore } from "~/APIs/store";
+import useLanguageStore from "~/APIs/store";
 import Container from "~/_components/Container";
 import "leaflet/dist/leaflet.css";
 import polyline from "@mapbox/polyline";
-import { useRouter } from "next/navigation";
-import { useStudentBusId } from "~/APIs/hooks/useBus";
-import Spinner from "~/_components/Spinner";
-import StudentSelector from "~/_components/StudentSelector";
+import { useBusInfo } from "~/APIs/hooks/useBus";
+import { Skeleton } from "~/components/ui/Skeleton";
+import Button from "~/_components/Button";
+import { IoClose, IoEye } from "react-icons/io5";
 
 // ============================
 // Type Definitions
@@ -62,14 +63,45 @@ const createCustomMarkerIcon = (color: string) => {
   });
 };
 
+const calculateDistanceKm = (
+  [lat1, lon1]: [number, number],
+  [lat2, lon2]: [number, number],
+): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const AutoZoom = ({
+  from,
+  to,
+}: {
+  from: [number, number];
+  to: [number, number];
+}) => {
+  const map = useMap();
+  useEffect(() => {
+    map.fitBounds([from, to], { padding: [50, 50] });
+  }, [from, to, map]);
+
+  return null;
+};
+
 // ============================
 // Bus Component
 // ============================
 const Bus: React.FC = () => {
-
+  const [showUpdatesPanel, setShowUpdatesPanel] = useState(true);
   // STOMP connection and location states
   const [connected, setConnected] = useState<boolean>(false);
-  const [busId, setBusId] = useState<string>("1");
+  const [busId, setBusId] = useState<string>("");
   const [busLocation, setBusLocation] = useState<[number, number] | null>(null);
   const [currentLocation, setCurrentLocation] = useState<
     [number, number] | null
@@ -79,7 +111,24 @@ const Bus: React.FC = () => {
 
   const token = Cookies.get("token");
   const language = useLanguageStore((state) => state.language);
+  const [messages, setMessages] = useState<BusLocation[]>([]);
+  const busIdNumber = parseInt(busId);
+  const { data: busInfo, isLoading: isBusLoading } = useBusInfo(
+    connected && busId ? busIdNumber : undefined,
+  );
 
+  useEffect(() => {
+    console.log("Current:", currentLocation, "Bus:", busLocation);
+  }, [currentLocation, busLocation]);
+
+  // get height of screen
+  const [screenHeight, setScreenHeight] = useState<number>(window.innerHeight);
+  useEffect(() => {
+    const handleResize = () => setScreenHeight(window.innerHeight);
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // ----------------------------
   // 1. Get User's Current Location
   // ----------------------------
@@ -112,6 +161,7 @@ const Bus: React.FC = () => {
   // 2. Connect via STOMP and subscribe to bus location updates
   // ----------------------------
   useEffect(() => {
+    if (!busId || !token) return;
     const client = new Client({
       brokerURL: `${baseUrlStock}ws?token=${token}`,
       debug: (str: string) => console.log(str),
@@ -126,6 +176,7 @@ const Bus: React.FC = () => {
 
       try {
         client.subscribe(`/topic/bus-location/${busId}`, (message: Message) => {
+          console.log("🔴 Bus message received:", message);
           const rawData: RawBusData = JSON.parse(message.body);
           const data: BusLocation = {
             message: rawData.message,
@@ -164,32 +215,29 @@ const Bus: React.FC = () => {
   // 3. Fetch Route from Current Location to Bus Location
   // ----------------------------
   useEffect(() => {
-    if (!currentLocation || !busLocation) return;
+    if (!currentLocation || !busLocation) {
+      console.log("Skipping route fetch: Missing locations");
+      return;
+    }
 
     const fetchRoute = async () => {
-      // API key and URL for LocationIQ Directions API
       const apiKey = "pk.d807ad8f5a3c9654c978548059f91986";
       const [startLat, startLng] = currentLocation;
       const [destLat, destLng] = busLocation;
       const url = `https://us1.locationiq.com/v1/directions/driving/${startLng},${startLat};${destLng},${destLat}?key=${apiKey}&geometries=polyline`;
+
       try {
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error("Failed to fetch route");
-        }
         const data = await response.json();
-        const polylineString = data.routes[0].geometry;
-        // Decode the polyline string into an array of [lat, lng] points
-        const decodedPoints: [number, number][] = polyline
+        console.log("Route API Response:", data);
+
+        const polylineString = data.routes[0]?.geometry;
+        const decodedPoints = polyline
           .decode(polylineString)
-          .filter(
-            (point: number[]): point is [number, number] =>
-              point.length >= 2 &&
-              typeof point[0] === "number" &&
-              typeof point[1] === "number",
-          );
+          .filter((point): point is [number, number] => point.length >= 2);
+
         setRoutePoints(decodedPoints);
-        console.log(`Route updated with ${decodedPoints.length} points.`);
+        console.log("Decoded polyline points:", decodedPoints);
       } catch (error) {
         console.error("Error fetching route:", error);
       }
@@ -202,10 +250,10 @@ const Bus: React.FC = () => {
   // 4. Optional: Connect/Disconnect Handlers
   // ----------------------------
   const connect = useCallback(() => {
-    if (stompClient && !connected) {
+    if (stompClient && !connected && busId) {
       stompClient.activate();
     }
-  }, [stompClient, connected]);
+  }, [stompClient, connected, busId]);
 
   const disconnect = useCallback(() => {
     if (stompClient && connected) {
@@ -215,6 +263,21 @@ const Bus: React.FC = () => {
       setRoutePoints([]);
     }
   }, [stompClient, connected]);
+
+  // dummy data
+  const addMessage = (data: BusLocation) => {
+    setMessages((prev) => [...prev, data]);
+  };
+
+  useEffect(() => {
+    if (connected && messages.length === 0) {
+      addMessage({
+        busId: Number(busId),
+        latitude: 30.0444,
+        longitude: 31.2357,
+      });
+    }
+  }, [connected]);
 
   // ----------------------------
   // 5. Render the Map
@@ -226,79 +289,74 @@ const Bus: React.FC = () => {
 
   return (
     <Container>
-      <div className="mx-auto max-w-7xl p-6">
+      <div className="mx-auto w-full px-2">
         <div className="rounded-lg bg-bgPrimary p-6 shadow-lg">
-          <div className="mb-6 flex items-center gap-3">
-            <BusIcon className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-textSecondary">
-              {language === "fr"
-                ? "Suivi de localisation des bus"
-                : language === "ar"
-                  ? "تعقب موقع الحافلة"
-                  : "Bus Location Tracker"}
-            </h1>
-          </div>
-
-          <div className="mb-6 space-x-4">
-            <button
-              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
-                connected
-                  ? "cursor-not-allowed bg-bgSecondary"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-              onClick={connect}
-              disabled={connected}
-            >
-              <div
-                className={`h-2 w-2 rounded-full ${connected ? "bg-gray-400" : "bg-green-400"}`}
+          <div className="mb-6 flex justify-between space-x-4">
+            <div className="">
+              <input
+                type="text"
+                value={busId}
+                onChange={(e) => setBusId(e.target.value)}
+                className="w-full rounded-lg border border-borderPrimary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={
+                  language === "fr"
+                    ? "Entrez l'ID du bus"
+                    : language === "ar"
+                      ? "أدخل معرف الحافلة"
+                      : "Enter Bus ID"
+                }
               />
-              {language === "fr"
-                ? "Connecter"
-                : language === "ar"
-                  ? "توصيل"
-                  : "Connect"}
-            </button>
-            <button
-              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
-                !connected
-                  ? "cursor-not-allowed bg-bgSecondary"
-                  : "bg-red-500 text-white hover:bg-red-600"
-              }`}
-              onClick={disconnect}
-              disabled={!connected}
-            >
-              <div
-                className={`h-2 w-2 rounded-full ${!connected ? "bg-gray-400" : "bg-red-400"}`}
-              />
-              {language === "fr"
-                ? "Déconnecter"
-                : language === "ar"
-                  ? "فصل"
-                  : "Disconnect"}
-            </button>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <button
+                className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
+                  connected
+                    ? "cursor-not-allowed bg-bgSecondary"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
+                onClick={connect}
+                disabled={connected}
+              >
+                <div
+                  className={`h-2 w-2 rounded-full ${connected ? "bg-gray-400" : "bg-green-400"}`}
+                />
+                {language === "fr"
+                  ? "Connecter"
+                  : language === "ar"
+                    ? "توصيل"
+                    : "Connect"}
+              </button>
+              <button
+                className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold transition-colors duration-200 ${
+                  !connected
+                    ? "cursor-not-allowed bg-bgSecondary"
+                    : "bg-red-500 text-white hover:bg-red-600"
+                }`}
+                onClick={disconnect}
+                disabled={!connected}
+              >
+                <div
+                  className={`h-2 w-2 rounded-full ${!connected ? "bg-gray-400" : "bg-red-400"}`}
+                />
+                {language === "fr"
+                  ? "Déconnecter"
+                  : language === "ar"
+                    ? "فصل"
+                    : "Disconnect"}
+              </button>
+            </div>
           </div>
 
           {/* Bus ID input (optional; you can remove if not needed) */}
-          <div className="mb-4">
-            <input
-              type="text"
-              value={busId}
-              onChange={(e) => setBusId(e.target.value)}
-              className="w-full rounded-lg border border-borderPrimary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={
-                language === "fr"
-                  ? "Entrez l'ID du bus"
-                  : language === "ar"
-                    ? "أدخل معرف الحافلة"
-                    : "Enter Bus ID"
-              }
-            />
-          </div>
+          <div className="mb-4"></div>
 
-          <div className="h-96 overflow-hidden rounded-lg border border-gray-300">
+          <div
+            style={{ height: screenHeight - 240 }}
+            className="relative overflow-hidden rounded-lg border border-gray-300"
+          >
             <MapContainer
               center={defaultPosition}
-              zoom={15}
+              zoom={13}
               className="h-full w-full"
             >
               <TileLayer
@@ -306,43 +364,148 @@ const Bus: React.FC = () => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
 
-              {/* Draw the route polyline if available */}
-              {routePoints.length > 0 && (
-                <Polyline positions={routePoints} color="blue" weight={4} />
-              )}
-
-              {/* Marker for the user's current location */}
               {currentLocation && (
                 <Marker
                   position={currentLocation}
-                  icon={createCustomMarkerIcon("#00ff00")}
+                  icon={createCustomMarkerIcon("#4ade80")}
                 >
                   <Popup>
-                    {language === "fr"
-                      ? "Votre position"
-                      : language === "ar"
-                        ? "موقعك"
-                        : "Your Location"}
+                    {language === "ar"
+                      ? "موقعي"
+                      : language === "fr"
+                        ? "Ma position"
+                        : "My Location"}
                   </Popup>
                 </Marker>
               )}
 
-              {/* Marker for the bus location */}
-              {busLocation && (
-                <Marker
-                  position={busLocation}
-                  icon={createCustomMarkerIcon("#ff0000")}
-                >
-                  <Popup>
-                    {language === "fr"
-                      ? "Localisation du bus"
-                      : language === "ar"
-                        ? "موقع الحافلة"
-                        : "Bus Location"}
-                  </Popup>
-                </Marker>
+              {currentLocation && messages.length > 0 && (
+                <>
+                  <Polyline
+                    positions={[
+                      currentLocation,
+                      [
+                        messages[messages.length - 1]?.latitude ?? 0,
+                        messages[messages.length - 1]?.longitude ?? 0,
+                      ],
+                    ]}
+                    color="blue"
+                    weight={5}
+                    dashArray="6"
+                  />
+                  <AutoZoom
+                    from={currentLocation}
+                    to={[
+                      messages[messages.length - 1]?.latitude ?? 0,
+                      messages[messages.length - 1]?.longitude ?? 0,
+                    ]}
+                  />
+                </>
               )}
+
+              {/* <LocationMarker
+                onLocationSelect={handleLocationSelect}
+                position={markerPosition}
+              /> */}
             </MapContainer>
+
+            {connected && (
+              <button
+                onClick={() => setShowUpdatesPanel(!showUpdatesPanel)}
+                className="absolute right-7 top-7 z-[1100] flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-lg transition hover:bg-primaryHover"
+              >
+                {showUpdatesPanel ? (
+                  <IoClose className="h-5 w-5" />
+                ) : (
+                  <IoEye className="h-4 w-4" />
+                )}
+              </button>
+            )}
+            {connected && showUpdatesPanel && (
+              <div
+                style={{ maxHeight: screenHeight - 260 }}
+                className="absolute right-5 top-5 z-[1000] w-[300px] rounded-lg bg-bgPrimary p-4"
+              >
+                <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-textPrimary">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  {language === "fr"
+                    ? "Mises à jour de localisation"
+                    : language === "ar"
+                      ? "تحديثات الموقع"
+                      : "Location Updates"}
+                </h2>
+                <div className="max-h-96 space-y-2 overflow-y-auto">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg border border-borderPrimary bg-bgPrimary p-3 shadow-sm"
+                    >
+                      <div className="flex items-center gap-2 font-medium text-textPrimary">
+                        <BusIcon className="h-4 w-4 text-primary" />
+                        {language === "fr"
+                          ? `ID de bus : ${msg.busId}`
+                          : language === "ar"
+                            ? `رقم معرف الحافلة: ${msg.busId}`
+                            : `Bus ID: ${msg.busId}`}
+                      </div>
+                      {msg.message && (
+                        <div className="mb-2 pl-6 text-gray-600">
+                          {msg.message}
+                        </div>
+                      )}
+                      <div className="pl-6 text-gray-600">
+                        {language === "fr"
+                          ? `Longitude : ${msg.longitude.toFixed(6)}\nLatitude : ${msg.latitude.toFixed(6)}`
+                          : language === "ar"
+                            ? `الخط الطولي: ${msg.longitude.toFixed(6)}\nالعرض: ${msg.latitude.toFixed(6)}`
+                            : `Longitude: ${msg.longitude.toFixed(6)}\nLatitude: ${msg.latitude.toFixed(6)}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 border-t pt-3">
+                  {isBusLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : busInfo ? (
+                    <>
+                      <p>
+                        <strong>Driver Name:</strong> {busInfo.driverName}
+                      </p>
+                      <p>
+                        <strong>Bus No.:</strong> {busInfo.busNumber}
+                      </p>
+                      <p>
+                        <strong>Bus Speed:</strong> {busInfo.speed} km/h
+                      </p>
+                      <p>
+                        <strong>Phone:</strong> +
+                        {busInfo.phoneNumber.countryCode}{" "}
+                        {busInfo.phoneNumber.nationalNumber}
+                      </p>
+
+                      <Button
+                        className="mt-4"
+                        onClick={() => {
+                          window.open(
+                            `tel:+${busInfo.phoneNumber.countryCode}${busInfo.phoneNumber.nationalNumber}`,
+                          );
+                        }}
+                      >
+                        Call Driver
+                      </Button>
+                    </>
+                  ) : (
+                    <p>No bus info available</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { fetchBusSubscriptionInfo, fetchMyRegion, fetchStudentBusId, fetchSubscribeStudentToBus, MyRegion, Region, SubscriptionInfo } from './../features/bus';
+import { BusInfo, fetchBusInfo, fetchBusSubscriptionInfo, fetchMyRegion, fetchStudentBusId, fetchSubscribeStudentToBus, MyRegion, Region, SubscriptionInfo } from './../features/bus';
 import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { fetchAllRegions } from "../features/bus";
 
@@ -43,9 +43,20 @@ export const useStudentBusId = (studentId?: string) => {
     refetchOnReconnect: false,
   });
 };
-
 export const useSubscribeStudentToBus = () => {
   return useMutation({
     mutationFn: fetchSubscribeStudentToBus,
+  });
+};
+
+export const useBusInfo = (busId?: number) => {
+  return useQuery<BusInfo, Error>({
+    queryKey: ["bus-info", busId],
+    queryFn: () => fetchBusInfo(busId!),
+    enabled: !!busId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 };
