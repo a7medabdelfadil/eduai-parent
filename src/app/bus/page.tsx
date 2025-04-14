@@ -9,6 +9,9 @@ import {
   Marker,
   Polyline,
   useMap,
+  Tooltip,
+  CircleMarker,
+  useMapEvents,
 } from "react-leaflet";
 import { MapPin, Bus as BusIcon } from "lucide-react";
 import { divIcon } from "leaflet";
@@ -129,6 +132,32 @@ const Bus: React.FC = () => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
+    null,
+  );
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setMarkerPosition([lat, lng]);
+  };
+
+  const LocationMarker: React.FC<{
+    onLocationSelect: (lat: number, lng: number) => void;
+    position: [number, number] | null;
+  }> = ({ onLocationSelect, position }) => {
+    useMapEvents({
+      click(e) {
+        onLocationSelect(e.latlng.lat, e.latlng.lng);
+      },
+    });
+
+    return position ? (
+      <Marker position={position} icon={createCustomMarkerIcon("#e84743")}>
+        <Popup>Bus Location</Popup>
+      </Marker>
+    ) : null;
+  };
+
   // ----------------------------
   // 1. Get User's Current Location
   // ----------------------------
@@ -378,6 +407,31 @@ const Bus: React.FC = () => {
                   </Popup>
                 </Marker>
               )}
+              {busLocation && (
+                <Marker
+                  position={busLocation}
+                  icon={createCustomMarkerIcon("#ff0000")}
+                >
+                  <Tooltip permanent direction="top" offset={[0, -10]}>
+                    {language === "fr"
+                      ? "Bus"
+                      : language === "ar"
+                        ? "الحافلة"
+                        : "Bus"}
+                  </Tooltip>
+                </Marker>
+              )}
+              {busLocation && (
+                <CircleMarker
+                  center={busLocation}
+                  radius={10}
+                  pathOptions={{
+                    color: "red",
+                    fillColor: "red",
+                    fillOpacity: 0.4,
+                  }}
+                />
+              )}
 
               {currentLocation && messages.length > 0 && (
                 <>
@@ -402,11 +456,10 @@ const Bus: React.FC = () => {
                   />
                 </>
               )}
-
-              {/* <LocationMarker
+              <LocationMarker
                 onLocationSelect={handleLocationSelect}
                 position={markerPosition}
-              /> */}
+              />
             </MapContainer>
 
             {connected && (
