@@ -6,12 +6,8 @@ import { Calendar } from "~/components/ui/calendar";
 import { Text } from "~/_components/Text";
 import { format } from "date-fns";
 import Box from "~/_components/Box";
-import { FiDownload } from "react-icons/fi";
-import { AiOutlineDown } from "react-icons/ai";
-import { PiLineVerticalBold } from "react-icons/pi";
 import BoxGrid from "~/_components/BoxGrid";
 import { PiLineVertical } from "react-icons/pi";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Select,
@@ -61,6 +57,7 @@ const Schedule = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | undefined>(
     undefined,
   );
+  console.log("👾 ~ Schedule ~ selectedStudent:", selectedStudent)
   const { data: students, isLoading: isStudents } = useGetAllStudents();
 
   const formattedDate = React.useMemo(
@@ -170,6 +167,7 @@ const Schedule = () => {
     selectedStudent,
     formattedDate,
   );
+  console.log("👾 ~ Schedule ~ materials:", materials)
   const { data: attendance } = useGetAllAttendances(
     selectedStudent,
     formattedDate,

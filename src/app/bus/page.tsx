@@ -205,7 +205,6 @@ const Bus: React.FC = () => {
 
       try {
         client.subscribe(`/topic/bus-location/${busId}`, (message: Message) => {
-          console.log("🔴 Bus message received:", message);
           const rawData: RawBusData = JSON.parse(message.body);
           const data: BusLocation = {
             message: rawData.message,
@@ -213,9 +212,10 @@ const Bus: React.FC = () => {
             longitude: rawData.data.longitude,
             latitude: rawData.data.latitude,
           };
-          // Update bus location state with [latitude, longitude]
+
           setBusLocation([data.latitude, data.longitude]);
-          console.log("Received bus location:", data.latitude, data.longitude);
+
+          setMessages((prev) => [...prev, data]);
         });
       } catch (error) {
         console.error("Error in subscription:", error);
@@ -298,15 +298,15 @@ const Bus: React.FC = () => {
     setMessages((prev) => [...prev, data]);
   };
 
-  useEffect(() => {
-    if (connected && messages.length === 0) {
-      addMessage({
-        busId: Number(busId),
-        latitude: 30.0444,
-        longitude: 31.2357,
-      });
-    }
-  }, [connected]);
+  // useEffect(() => {
+  //   if (connected && messages.length === 0) {
+  //     addMessage({
+  //       busId: Number(busId),
+  //       latitude: 30.0444,
+  //       longitude: 31.2357,
+  //     });
+  //   }
+  // }, [connected]);
 
   // ----------------------------
   // 5. Render the Map
