@@ -2,9 +2,7 @@
 import Container from "~/_components/Container";
 import * as React from "react";
 import Box from "~/_components/Box";
-import Button from "~/_components/Button";
-import SearchableSelect from "~/_components/SearchSelect";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Text } from "~/_components/Text";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { useState } from "react";
@@ -21,13 +19,13 @@ import {
 } from "~/components/ui/select";
 import { useGetAllStudents } from "~/APIs/hooks/useGrades";
 import { useStudentUpcomingEvents } from "~/APIs/hooks/useEvents";
-import Spinner from "~/_components/Spinner";
 import {
   useGetAttendance,
   useGetDailyPlan,
   useGetGPA,
 } from "~/APIs/hooks/useExam";
 import { Skeleton } from "~/components/ui/Skeleton";
+import Button from "~/_components/Button";
 
 const FollowUp = () => {
   const { control } = useForm({
@@ -191,9 +189,8 @@ const FollowUp = () => {
             )}
           </Select>
         </div>
-
         <div>
-          {/* <Button as="link" href="/follow-up/add-student">+ Add Another Child</Button> */}
+          <Button>Add Another Child</Button>
         </div>
       </div>
       {selectedStudent ? (

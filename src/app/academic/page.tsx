@@ -57,13 +57,13 @@ const Schedule = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | undefined>(
     undefined,
   );
-  console.log("👾 ~ Schedule ~ selectedStudent:", selectedStudent)
   const { data: students, isLoading: isStudents } = useGetAllStudents();
 
   const formattedDate = React.useMemo(
     () => format(selectedDate, "yyyy-MM-dd"),
     [selectedDate],
   );
+  console.log("👾 ~ Schedule ~ formattedDate:", formattedDate)
 
   const language = useLanguageStore((state) => state.language);
 
@@ -167,7 +167,6 @@ const Schedule = () => {
     selectedStudent,
     formattedDate,
   );
-  console.log("👾 ~ Schedule ~ materials:", materials)
   const { data: attendance } = useGetAllAttendances(
     selectedStudent,
     formattedDate,
