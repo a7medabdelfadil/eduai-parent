@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { FiSun, FiMoon } from "react-icons/fi";
 
 interface SwitchProps {
   theme: string;
@@ -20,7 +21,21 @@ const Switch: React.FC<SwitchProps> = ({ theme, setTheme }) => {
         checked={isDark}
         onChange={() => setIsDark(!isDark)}
       />
-      <div className="h-6 w-12 md:h-8 md:w-16 rounded-full bg-gradient-to-r from-sky-200 to-sky-400 transition-all duration-500 after:absolute after:left-1 after:top-1 after:flex after:h-4 after:w-4 md:after:h-6 md:after:w-6 after:items-center after:justify-center after:rounded-full after:bg-white after:text-sm md:after:text-lg after:shadow-md after:transition-all after:duration-500 after:content-['☀️'] peer-checked:from-blue-400 peer-checked:to-indigo-500 peer-checked:after:translate-x-8 peer-checked:after:content-['🌙']" />
+      <div
+        className={`h-8 w-16 rounded-full transition-colors duration-500 ${
+          isDark ? "bg-[#C8BCF6]" : "bg-[#F4F4F4]"
+        } relative`}
+      >
+        <div
+          className={`absolute top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 shadow-md ${
+            isDark
+              ? "translate-x-8 bg-black text-[#C8BCF6]"
+              : "bg-[#C8BCF6] text-[#F4F4F4]"
+          }`}
+        >
+          {isDark ? <FiMoon size={16} /> : <FiSun size={16} />}
+        </div>
+      </div>
     </label>
   );
 };
