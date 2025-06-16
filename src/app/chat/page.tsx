@@ -186,9 +186,9 @@ const Chat = () => {
     >
       <div
         dir={language === "ar" ? "rtl" : "ltr"}
-        className="flex w-full justify-between rounded-lg max-[1180px]:grid max-[1180px]:justify-center"
+        className="flex w-full justify-between rounded-lg flex-col lg:flex-row"
       >
-        <div className="flex w-2/3 rounded-xl bg-bgSecondary">
+        <div className="flex w-full lg:w-[50%] xl:w-[65%] rounded-xl bg-bgSecondary">
           {userId == "" ? (
             <div className="flex h-full w-full flex-col items-center justify-center">
               <img
@@ -224,7 +224,7 @@ const Chat = () => {
             />
           )}
         </div>
-        <div className="h-[calc(100vh-90px)] w-1/3 overflow-y-auto bg-bgPrimary p-5">
+        <div className="h-[calc(100vh-90px)] w-full lg:w-[50%] xl:w-[35%] overflow-y-auto bg-bgPrimary p-5">
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <Spinner />
