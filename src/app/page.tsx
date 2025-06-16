@@ -510,6 +510,18 @@ export default function Home() {
                       height={300}
                       className="mb-4 hidden dark:block"
                     />
+                    <Text
+                      color="gray"
+                      font="semiBold"
+                      size="lg"
+                      className="text-center"
+                    >
+                      {language === "ar"
+                        ? "لا توجد أحداث اليوم"
+                        : language === "fr"
+                          ? "Aucun événement aujourd'hui"
+                          : "No Today's Events"}
+                    </Text>
                   </div>
                 )}
               </div>
@@ -607,6 +619,18 @@ export default function Home() {
                       height={300}
                       className="mb-4 hidden dark:block"
                     />
+                    <Text
+                      color="gray"
+                      font="semiBold"
+                      size="lg"
+                      className="text-center"
+                    >
+                      {translate(
+                        "No Upcoming Events",
+                        "Aucun événement à venir",
+                        "لا توجد أحداث قادمة",
+                      )}
+                    </Text>
                   </div>
                 )}
               </div>
