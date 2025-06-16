@@ -135,7 +135,7 @@ export default function Home() {
     refetch,
     isLoading,
   } = useGetAllPosts({ page: 0, size: 10 });
-  console.log('dataPosts', dataPosts);
+  console.log("dataPosts", dataPosts);
   const { mutate: likePost } = useLikePost();
 
   const handleLikeClick = (postId: number, liked: boolean) => {
@@ -189,199 +189,224 @@ export default function Home() {
         dir={language === "ar" ? "rtl" : "ltr"}
       >
         <div className="flex w-full flex-col gap-4">
-          {isLoading
-            ? [...Array(3)].map((_, index) => <PostSkeleton key={index} />)
-            : dataPosts?.data.content.map((post) => (
-                <div
-                  key={post.id}
-                  className="w-full rounded-xl bg-bgPrimary p-4"
-                >
-                  <div className="mb-4 border-b border-borderPrimary py-4">
-                    <div className="mb-4 flex justify-between">
-                      <div className="flex gap-4">
-                        <div className="h-[60px] w-[60px] overflow-hidden">
-                          <Image
-                            priority
-                            unoptimized
-                            src={
-                              post.isPublisherPictureExists
-                                ? post.publisherPicture
-                                : "/images/default.png"
-                            }
-                            className="h-[60px] w-[60px] rounded-full"
-                            alt="Profile Photo"
-                            width={60}
-                            height={60}
-                          />
-                        </div>
-                        <div>
-                          <Text font="bold">{post.publisherName}</Text>
-                          <Text color="gray">
-                            {new Date(post.creationDate).toLocaleTimeString()}
-                          </Text>
-                        </div>
+          {isLoading ? (
+            [...Array(3)].map((_, index) => <PostSkeleton key={index} />)
+          ) : dataPosts?.data.content?.length &&
+            dataPosts?.data.content.length > 0 ? (
+            dataPosts?.data.content.map((post) => (
+              <div key={post.id} className="w-full rounded-xl bg-bgPrimary p-4">
+                <div className="mb-4 border-b border-borderPrimary py-4">
+                  <div className="mb-4 flex justify-between">
+                    <div className="flex gap-4">
+                      <div className="h-[60px] w-[60px] overflow-hidden">
+                        <Image
+                          priority
+                          unoptimized
+                          src={
+                            post.isPublisherPictureExists
+                              ? post.publisherPicture
+                              : "/images/default.png"
+                          }
+                          className="h-[60px] w-[60px] rounded-full"
+                          alt="Profile Photo"
+                          width={60}
+                          height={60}
+                        />
                       </div>
-                      <div className="mt-2 font-extrabold"></div>
+                      <div>
+                        <Text font="bold">{post.publisherName}</Text>
+                        <Text color="gray">
+                          {new Date(post.creationDate).toLocaleTimeString()}
+                        </Text>
+                      </div>
                     </div>
-                    <Text className="m-2">{post.content}</Text>
-                    <div className="mt-4">
-                      {post?.attachments?.length > 0 && (
-                        <div
-                          className={`grid gap-4 ${
-                            post?.attachments?.length === 1
-                              ? "grid-cols-1"
-                              : post?.attachments?.length === 2
-                                ? "grid-cols-2"
-                                : "grid-cols-2 md:grid-cols-3"
-                          }`}
-                        >
-                          {" "}
-                          {post.attachments
-                            .slice(0, 6)
-                            .map((attachment, index) => (
-                              <div key={index} className="relative">
-                                <ImageComponent
-                                  src={attachment.viewLink}
-                                  fallbackSrc="/images/noImage.png"
-                                  aspectRatio="aspect-video"
-                                  objectFit="cover"
-                                  priority={true}
-                                  key={index}
-                                  className="h-full w-full rounded-md object-cover"
-                                  alt={`Post Image ${index + 1}`}
-                                  onLoadingComplete={() =>
-                                    console.log("Image loaded")
-                                  }
-                                  onError={(error) =>
-                                    console.error(
-                                      "Image failed to load:",
-                                      error,
-                                    )
-                                  }
-                                />
-                              </div>
-                            ))}
-                          {post.attachments.length > 6 && (
-                            <div className="relative flex items-center justify-center rounded-md bg-gray-200">
-                              <Text
-                                font="bold"
-                                size="lg"
-                                className="text-primary"
-                              >
-                                +{post.attachments.length - 6}{" "}
-                                {language === "ar"
-                                  ? "المزيد"
-                                  : language === "fr"
-                                    ? "plus"
-                                    : "more"}
-                              </Text>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <div className="mt-2 font-extrabold"></div>
                   </div>
-                  <div>
-                    <div className="flex gap-3">
-                      <button
-                        className="flex items-center gap-1"
-                        onClick={() =>
-                          handleLikesCount(post.id, post.likesCount)
-                        }
+                  <Text className="m-2">{post.content}</Text>
+                  <div className="mt-4">
+                    {post?.attachments?.length > 0 && (
+                      <div
+                        className={`grid gap-4 ${
+                          post?.attachments?.length === 1
+                            ? "grid-cols-1"
+                            : post?.attachments?.length === 2
+                              ? "grid-cols-2"
+                              : "grid-cols-2 md:grid-cols-3"
+                        }`}
                       >
-                        {post?.isLiked ? (
-                          <FaHeart
-                            color="red"
-                            size={20}
-                            onClick={() => handleLikeClick(post.id, false)}
-                          />
-                        ) : (
-                          <FaRegHeart
-                            size={20}
-                            onClick={() => handleLikeClick(post.id, true)}
-                          />
-                        )}
-
-                        <Text size={"xs"}>{post?.likesCount}</Text>
-                      </button>
-                      <button
-                        className="flex items-center gap-1"
-                        onClick={() => handleCommentClick(post.id)}
-                      >
-                        <FaRegComment size={20} />
-                        <Text size={"xs"}>{post?.commentsCount}</Text>
-                      </button>
-                    </div>
-
-                    {selectedPostId === post.id && (
-                      <div className="my-4 ml-4">
-                        {isLoadingComments ? (
-                          <div className="flex justify-center py-4">
-                            <Spinner />
-                          </div>
-                        ) : (
-                          <>
-                            {comments?.data.content.map((comment) => (
-                              <Comment
-                                refetchComments={refetchComments}
-                                key={comment.id}
-                                userName={comment.creatorName}
-                                comment={comment.comment}
-                                time={new Date(
-                                  comment.createdDate,
-                                ).toLocaleTimeString()}
-                                imageUrl={
-                                  comment.isCreatorPictureExists
-                                    ? comment.creatorPicture
-                                    : "/images/default.png"
+                        {" "}
+                        {post.attachments
+                          .slice(0, 6)
+                          .map((attachment, index) => (
+                            <div key={index} className="relative">
+                              <ImageComponent
+                                src={attachment.viewLink}
+                                fallbackSrc="/images/noImage.png"
+                                aspectRatio="aspect-video"
+                                objectFit="cover"
+                                priority={true}
+                                key={index}
+                                className="h-full w-full rounded-md object-cover"
+                                alt={`Post Image ${index + 1}`}
+                                onLoadingComplete={() =>
+                                  console.log("Image loaded")
                                 }
-                                postId={selectedPostId}
-                                commentId={comment.id}
-                                isLiked={comment.isLiked}
-                                likesCount={comment.likesCount}
+                                onError={(error) =>
+                                  console.error("Image failed to load:", error)
+                                }
                               />
-                            ))}
-
-                            {comments?.data.content.length === 0 && (
-                              <Text color="gray" className="py-4 text-center">
-                                {language === "ar"
-                                  ? "لا توجد تعليقات حتى الآن"
-                                  : language === "fr"
-                                    ? "Pas encore de commentaires"
-                                    : "No comments yet"}
-                              </Text>
-                            )}
-                          </>
-                        )}
-
-                        {/* Comment input area */}
-                        <div className="relative flex">
-                          <Input
-                            border="gray"
-                            theme="comment"
-                            placeholder={
-                              language === "ar"
-                                ? "أضف تعليقًا..."
+                            </div>
+                          ))}
+                        {post.attachments.length > 6 && (
+                          <div className="relative flex items-center justify-center rounded-md bg-gray-200">
+                            <Text
+                              font="bold"
+                              size="lg"
+                              className="text-primary"
+                            >
+                              +{post.attachments.length - 6}{" "}
+                              {language === "ar"
+                                ? "المزيد"
                                 : language === "fr"
-                                  ? "Ajouter un commentaire..."
-                                  : "Add comment..."
-                            }
-                            type="comment"
-                            value={comment} // Set the input value to the state
-                            onChange={(e) => setComment(e.target.value)} // Update state on input change
-                          />
-                          <IoSend
-                            size={30}
-                            className={`absolute right-4 ${comment ? "text-textPrimary" : "text-textSecondary"} top-2 cursor-pointer`}
-                            onClick={handleSendComment} // Call the send function when clicked
-                          />
-                        </div>
+                                  ? "plus"
+                                  : "more"}
+                            </Text>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
+                <div>
+                  <div className="flex gap-3">
+                    <button
+                      className="flex items-center gap-1"
+                      onClick={() => handleLikesCount(post.id, post.likesCount)}
+                    >
+                      {post?.isLiked ? (
+                        <FaHeart
+                          color="red"
+                          size={20}
+                          onClick={() => handleLikeClick(post.id, false)}
+                        />
+                      ) : (
+                        <FaRegHeart
+                          size={20}
+                          onClick={() => handleLikeClick(post.id, true)}
+                        />
+                      )}
+
+                      <Text size={"xs"}>{post?.likesCount}</Text>
+                    </button>
+                    <button
+                      className="flex items-center gap-1"
+                      onClick={() => handleCommentClick(post.id)}
+                    >
+                      <FaRegComment size={20} />
+                      <Text size={"xs"}>{post?.commentsCount}</Text>
+                    </button>
+                  </div>
+
+                  {selectedPostId === post.id && (
+                    <div className="my-4 ml-4">
+                      {isLoadingComments ? (
+                        <div className="flex justify-center py-4">
+                          <Spinner />
+                        </div>
+                      ) : (
+                        <>
+                          {comments?.data.content.map((comment) => (
+                            <Comment
+                              refetchComments={refetchComments}
+                              key={comment.id}
+                              userName={comment.creatorName}
+                              comment={comment.comment}
+                              time={new Date(
+                                comment.createdDate,
+                              ).toLocaleTimeString()}
+                              imageUrl={
+                                comment.isCreatorPictureExists
+                                  ? comment.creatorPicture
+                                  : "/images/default.png"
+                              }
+                              postId={selectedPostId}
+                              commentId={comment.id}
+                              isLiked={comment.isLiked}
+                              likesCount={comment.likesCount}
+                            />
+                          ))}
+
+                          {comments?.data.content.length === 0 && (
+                            <Text color="gray" className="py-4 text-center">
+                              {language === "ar"
+                                ? "لا توجد تعليقات حتى الآن"
+                                : language === "fr"
+                                  ? "Pas encore de commentaires"
+                                  : "No comments yet"}
+                            </Text>
+                          )}
+                        </>
+                      )}
+
+                      {/* Comment input area */}
+                      <div className="relative flex">
+                        <Input
+                          border="gray"
+                          theme="comment"
+                          placeholder={
+                            language === "ar"
+                              ? "أضف تعليقًا..."
+                              : language === "fr"
+                                ? "Ajouter un commentaire..."
+                                : "Add comment..."
+                          }
+                          type="comment"
+                          value={comment} // Set the input value to the state
+                          onChange={(e) => setComment(e.target.value)} // Update state on input change
+                        />
+                        <IoSend
+                          size={30}
+                          className={`absolute right-4 ${comment ? "text-textPrimary" : "text-textSecondary"} top-2 cursor-pointer`}
+                          onClick={handleSendComment} // Call the send function when clicked
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 md:mt-10">
+              <Image
+                src="/images/no-news.png"
+                alt="No News"
+                width={500}
+                height={500}
+                className="mb-4 block dark:hidden"
+              />
+              <Image
+                src="/images/no-news-dark.png"
+                alt="No News"
+                width={500}
+                height={500}
+                className="mb-4 hidden dark:block"
+              />
+              <Text
+                color="gray"
+                font="semiBold"
+                size="lg"
+                className="text-center"
+              >
+                {language === "ar"
+                  ? "لا توجد أخبار حالياً."
+                  : language === "fr"
+                    ? "Pas de nouvelles pour le moment."
+                    : "No news at the moment."}
+              </Text>
+            </div>
+          )}
         </div>
+
         <div className="w-full rounded-md bg-bgPrimary p-4 md:w-1/2">
           {isEventsLoading ? (
             <>
@@ -468,13 +493,24 @@ export default function Home() {
                     </div>
                   ))
                 ) : (
-                  <Text color="gray" font="semiBold" size="lg" className="m-2">
-                    {language === "ar"
-                      ? "لا توجد فعاليات مجدولة لليوم."
-                      : language === "fr"
-                        ? "Aucun événement prévu pour aujourd'hui."
-                        : "No events scheduled for today."}
-                  </Text>
+                  <div className="flex flex-col items-center justify-center py-6">
+                    {/* Light mode image */}
+                    <Image
+                      src="/images/no-events.png"
+                      alt="No Events"
+                      width={300}
+                      height={300}
+                      className="mb-4 block dark:hidden"
+                    />
+                    {/* Dark mode image */}
+                    <Image
+                      src="/images/no-events-dark.png"
+                      alt="No Events"
+                      width={300}
+                      height={300}
+                      className="mb-4 hidden dark:block"
+                    />
+                  </div>
                 )}
               </div>
 
@@ -554,13 +590,24 @@ export default function Home() {
                     </div>
                   ))
                 ) : (
-                  <Text color="gray" font="semiBold" size="lg" className="m-2">
-                    {language === "ar"
-                      ? "لا توجد فعاليات قادمة مجدولة."
-                      : language === "fr"
-                        ? "Aucun événement à venir programmé."
-                        : "No upcoming events scheduled."}
-                  </Text>
+                  <div className="flex flex-col items-center justify-center py-6">
+                    {/* Light mode image */}
+                    <Image
+                      src="/images/no-events.png"
+                      alt="No Events"
+                      width={300}
+                      height={300}
+                      className="mb-4 block dark:hidden"
+                    />
+                    {/* Dark mode image */}
+                    <Image
+                      src="/images/no-events-dark.png"
+                      alt="No Events"
+                      width={300}
+                      height={300}
+                      className="mb-4 hidden dark:block"
+                    />
+                  </div>
                 )}
               </div>
             </>

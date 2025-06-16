@@ -1,15 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
-"use client"
+"use client";
 import Container from "~/_components/Container";
 import Modal from "~/_components/Modal";
 import SearchableSelect from "~/_components/SearchSelect";
 import Spinner from "~/_components/Spinner";
-import { useAllUsersChat, useCreateNewChat, useDeleteChat, useAllChats } from "~/APIs/hooks/useChat";
+import {
+  useAllUsersChat,
+  useCreateNewChat,
+  useDeleteChat,
+  useAllChats,
+} from "~/APIs/hooks/useChat";
 import { useChatListSocket } from "~/hooks/useRealTimeAllChats";
 import ChatPage from "./chatPage/chat";
 import { useCallback, useEffect, useState } from "react";
-import useLanguageStore, { useUserDataStore } from "~/APIs/store";
+import useLanguageStore, {
+  useBooleanValue,
+  useUserDataStore,
+} from "~/APIs/store";
 import { Controller, useForm } from "react-hook-form";
+import { cn } from "~/lib/utils";
+import { Text } from "~/_components/Text";
 interface ChatData {
   chatId: string;
   lastMessage: string;
@@ -34,8 +44,8 @@ const Chat = () => {
 
   const { mutate: createChat } = useCreateNewChat();
   const { mutate: deleteChat } = useDeleteChat();
-  const { data: users, isLoading: isGetting } = useAllUsersChat()
-  const { data, isLoading, refetch: regetusers } = useAllChats()
+  const { data: users, isLoading: isGetting } = useAllUsersChat();
+  const { data, isLoading, refetch: regetusers } = useAllChats();
 
   const optionsRigon =
     users?.data?.content.map((user: { Role: any; id: any; name: any }) => ({
@@ -43,22 +53,20 @@ const Chat = () => {
       label: `${user.name} - ${user.Role}`,
     })) || [];
 
-
   const handleDelete = (chatId: string) => {
-    deleteChat(
-      chatId,
-      {
-        onSuccess: () => {
-          regetusers();
-          setUserId("");
-        },
-        onError: (error) => {
-          console.error("Error deleting chat:", error);
-        }
-      }
-    );
+    deleteChat(chatId, {
+      onSuccess: () => {
+        regetusers();
+        setUserId("");
+      },
+      onError: (error) => {
+        console.error("Error deleting chat:", error);
+      },
+    });
   };
   const language = useLanguageStore((state) => state.language);
+  const bool = useBooleanValue((state) => state.boolean);
+
   const onSubmit = (formData: { targetUserId: string }) => {
     createChat(
       { targetUserId: formData.targetUserId },
@@ -69,8 +77,8 @@ const Chat = () => {
         },
         onError: (error) => {
           console.error("Error creating chat:", error);
-        }
-      }
+        },
+      },
     );
   };
 
@@ -86,7 +94,9 @@ const Chat = () => {
   const handleChatUpdate = useCallback((update: ChatData) => {
     setLocalChats((prevChats: ChatData[]) => {
       // Find if the chat already exists
-      const existingChatIndex = prevChats.findIndex(chat => chat.chatId === update.chatId);
+      const existingChatIndex = prevChats.findIndex(
+        (chat) => chat.chatId === update.chatId,
+      );
 
       if (existingChatIndex === -1) {
         return [update, ...prevChats];
@@ -100,8 +110,8 @@ const Chat = () => {
         numberOfNewMessages: update.numberOfNewMessages,
         targetUser: {
           ...(updatedChats[existingChatIndex]?.targetUser ?? {}),
-          ...update.targetUser
-        }
+          ...update.targetUser,
+        },
       };
 
       // Sort chats to bring the most recently updated chat to the top
@@ -115,11 +125,10 @@ const Chat = () => {
 
   const clearNewMessages = useCallback((chatId: string) => {
     setLocalChats((prevChats: ChatData[]) =>
-      prevChats.map((chat: ChatData): ChatData =>
-        chat.chatId === chatId
-          ? { ...chat, numberOfNewMessages: 0 }
-          : chat
-      )
+      prevChats.map(
+        (chat: ChatData): ChatData =>
+          chat.chatId === chatId ? { ...chat, numberOfNewMessages: 0 } : chat,
+      ),
     );
   }, []);
 
@@ -165,22 +174,70 @@ const Chat = () => {
       </div>
     );
   return (
-    <Container>
-      <div dir={language === "ar" ? "rtl" : "ltr"} className="flex w-full justify-between gap-10 rounded-lg p-4 max-[1180px]:grid max-[1180px]:justify-center">
-        <div className="h-[700px] w-full overflow-y-auto rounded-xl bg-bgPrimary p-5">
+    <div
+      className={cn("transition-transform duration-300 ease-in", {
+        // LTR layout
+        "lg:ml-[260px]": bool && language !== "ar",
+        "lg:ml-[90px]": !bool && language !== "ar",
+        // RTL layout
+        "lg:mr-[260px]": bool && language === "ar",
+        "lg:mr-[90px]": !bool && language === "ar",
+      })}
+    >
+      <div
+        dir={language === "ar" ? "rtl" : "ltr"}
+        className="flex w-full justify-between rounded-lg max-[1180px]:grid max-[1180px]:justify-center"
+      >
+        <div className="flex w-2/3 rounded-xl bg-bgSecondary">
+          {userId == "" ? (
+            <div className="flex h-full w-full flex-col items-center justify-center">
+              <img
+                src="/images/chat-empty.png"
+                alt="#"
+                className="block dark:hidden"
+              />
+              <img
+                src="/images/chat-empty-dark.png"
+                alt="#"
+                className="hidden dark:block"
+              />
+              <Text
+                className="max-w-[400px] text-center"
+                color={"gray"}
+                size={"xl"}
+                font={"medium"}
+              >
+                {language === "en"
+                  ? "To start a conversation, select a chat and begin interacting now."
+                  : language === "ar"
+                    ? "لبدء محادثة، اختر دردشة وابدأ التفاعل الآن."
+                    : "Pour commencer une conversation, sélectionnez une discussion et commencez à interagir dès maintenant."}
+              </Text>
+            </div>
+          ) : (
+            <ChatPage
+              userId={userId}
+              regetusers={regetusers}
+              userName={userName}
+              userRole={userRole}
+              realuserId={realuserId}
+            />
+          )}
+        </div>
+        <div className="h-[calc(100vh-90px)] w-1/3 overflow-y-auto bg-bgPrimary p-5">
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <Spinner />
             ) : (
               <>
                 <div className="flex justify-between text-start text-[22px] font-semibold">
-                  <h1>{
-                    language === "en"
-                      ? "Contacts"
+                  <h1>
+                    {language === "en"
+                      ? "Chat"
                       : language === "ar"
-                        ? "جهات الاتصال"
-                        : "Contacts"
-                  }</h1>
+                        ? "دردشة"
+                        : "Chat"}
+                  </h1>
                   <button onClick={handleOpenModal}>
                     <svg
                       className="h-8 w-8"
@@ -221,24 +278,24 @@ const Chat = () => {
                         </svg>
                       </div>
                       <input
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value)}
                         type="text"
                         id="icon"
                         name="icon"
-                        className="block w-full rounded-lg border-2 border-borderPrimary px-4 py-2 ps-11 text-sm outline-none focus:border-primary focus:ring-primary disabled:pointer-events-none disabled:opacity-50"
+                        className="block w-full rounded-lg border-2 border-borderPrimary bg-bgPrimary px-4 py-2 ps-11 text-sm outline-none focus:border-primary focus:ring-primary disabled:pointer-events-none disabled:opacity-50"
                         placeholder={"Search"}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 grid gap-2">
+                <div className="mt-2 grid w-full gap-2">
                   {localChats
-                    .filter((chat: { targetUser: { name: string; }; }) => {
+                    .filter((chat: { targetUser: { name: string } }) => {
                       return search.toLocaleLowerCase() === ""
                         ? chat
                         : chat.targetUser.name
-                          .toLocaleLowerCase()
-                          .includes(search);
+                            .toLocaleLowerCase()
+                            .includes(search);
                     })
                     .map((chat: any, idx: number) => (
                       <div
@@ -250,38 +307,36 @@ const Chat = () => {
                           setRealUserId(chat.targetUser.id);
                           regetusers();
                         }}
-                        className="flex w-full cursor-pointer items-center border-b border-borderPrimary px-2 py-1 hover:bg-bgSecondary"
+                        className="flex w-full items-center cursor-pointer border-b border-borderPrimary px-2 py-2 hover:bg-bgSecondary"
                       >
-                        <div
-                          className={`${chat.numberOfNewMessages > 0 ? "w-[150px]" : "w-[200px]"}`}
-                        >
-                          {!chat.targetUser.hasPhoto ? (
-                            <img
-                              src="/images/userr.png"
-                              className="mx-2 h-[40px] w-[40px] rounded-lg"
-                              alt="#"
-                            />
-                          ) : (
-                            <img
-                              src={chat.targetUser.photoLink}
-                              className="mx-2 h-[40px] w-[40px] rounded-lg"
-                              alt="#"
-                            />
-                          )}
+                        {/* User image */}
+                        <div className="w-14 shrink-0">
+                          <img
+                            src={
+                              chat.targetUser.hasPhoto
+                                ? chat.targetUser.photoLink
+                                : "/images/userr.png"
+                            }
+                            className="h-10 w-10 rounded-lg object-cover"
+                            alt="#"
+                          />
                         </div>
-                        <div className="grid w-full gap-2 break-words">
-                          <p className="font-semibold">
-                            {chat.targetUser.name}
 
+                        {/* Chat details */}
+                        <div className="min-w-0 flex-1 px-2">
+                          <p className="truncate font-semibold">
+                            {chat.targetUser.name}
                             <span className="text-[15px] text-textSecondary">
                               ({chat.targetUser.Role})
                             </span>
                           </p>
-                          <p className="mt-2 w-[400px] break-words font-semibold text-textSecondary">
+                          <p className="mt-1 truncate text-sm text-textSecondary">
                             {chat.lastMessage}
                           </p>
                         </div>
-                        <div className="grid w-full items-center justify-end gap-4 text-center text-end text-white">
+
+                        {/* Delete button and unread counter */}
+                        <div className="flex shrink-0 flex-col items-end gap-2 ps-2">
                           <button onClick={handleOpenModal2}>
                             <svg
                               className="h-6 w-6 text-error"
@@ -297,6 +352,7 @@ const Chat = () => {
                               />
                             </svg>
                           </button>
+
                           <Modal
                             isOpen={isModalOpen2}
                             onClose={handleCloseModal2}
@@ -305,7 +361,6 @@ const Chat = () => {
                               <h2 className="mb-4 text-xl font-bold text-gray-800">
                                 Are You Sure to Delete This Chat?
                               </h2>
-
                               <div className="flex justify-center space-x-4">
                                 <button
                                   onClick={() => {
@@ -316,7 +371,6 @@ const Chat = () => {
                                 >
                                   Yes
                                 </button>
-
                                 <button
                                   onClick={handleCloseModal2}
                                   className="rounded-md bg-gray-200 px-4 py-2 font-semibold text-gray-700 transition-colors duration-300 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
@@ -326,10 +380,11 @@ const Chat = () => {
                               </div>
                             </div>
                           </Modal>
+
                           {chat.numberOfNewMessages > 0 && (
-                            <p className="rounded-full bg-primary px-2">
+                            <span className="rounded-full bg-primary px-2 text-sm text-white">
                               {chat.numberOfNewMessages}
-                            </p>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -338,21 +393,6 @@ const Chat = () => {
               </>
             )}
           </div>
-        </div>
-        <div className="flex w-full rounded-xl bg-bgPrimary">
-          {userId == "" ? (
-            <div className="flex h-full w-full items-center justify-center">
-              <img src="/images/emptyState.png" alt="#" />
-            </div>
-          ) : (
-            <ChatPage
-              userId={userId}
-              regetusers={regetusers}
-              userName={userName}
-              userRole={userRole}
-              realuserId={realuserId}
-            />
-          )}
         </div>
       </div>
 
@@ -381,20 +421,19 @@ const Chat = () => {
                   />
                 )}
               />
-
             </label>
             <button
               disabled={isLoading}
               type="submit"
-              className="mt-5 w-fit rounded-xl bg-primary px-4 py-2 text-[18px] text-white duration-300 ease-in hover:bg-hover hover:shadow-xl"
+              className="hover:bg-hover mt-5 w-fit rounded-xl bg-primary px-4 py-2 text-[18px] text-white duration-300 ease-in hover:shadow-xl"
             >
               {isLoading ? "Adding..." : "Add Chat"}
             </button>
           </form>
         )}
       </Modal>
-    </Container>
+    </div>
   );
-}
+};
 
 export default Chat;

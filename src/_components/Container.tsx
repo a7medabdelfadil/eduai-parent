@@ -14,11 +14,11 @@ const Container = ({ children }: { children: ReactNode }) => {
         "mx-3 mt-5 transition-transform duration-300 ease-in",
         {
           // LTR layout
-          "lg:ml-[270px] lg:mr-3": bool && language !== "ar",
-          "lg:ml-[100px] lg:mr-3": !bool && language !== "ar",
+          "lg:ml-[280px] lg:mr-6": bool && language !== "ar",
+          "lg:ml-[110px] lg:mr-6": !bool && language !== "ar",
           // RTL layout
-          "lg:mr-[270px] lg:ml-3": bool && language === "ar",
-          "lg:mr-[100px] lg:ml-3": !bool && language === "ar",
+          "lg:mr-[280px] lg:ml-6": bool && language === "ar",
+          "lg:mr-[110px] lg:ml-6": !bool && language === "ar",
         }
       )}
     >

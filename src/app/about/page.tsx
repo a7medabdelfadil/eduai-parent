@@ -29,7 +29,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ label, value }) => (
 const About: React.FC = () => {
   return (
     <Container>
-      <div className="w-full overflow-x-hidden rounded-xl bg-bgPrimary p-4">
+      <div className="w-full mb-8 overflow-x-hidden rounded-xl bg-bgPrimary p-4">
         <Text font={"bold"} size={"4xl"}>About us</Text>
 
         <Section title="About EDU AI System">

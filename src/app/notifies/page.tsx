@@ -11,15 +11,15 @@ import { useUserDataStore } from "~/APIs/store";
 import {
   useDeleteNotificationMutation,
   useGetAllNotificationsQuery,
-  usePutNotifiReadMutation
+  usePutNotifiReadMutation,
 } from "~/APIs/hooks/useNotification";
+import SeeMoreButton from "~/_components/SeeMoreButton";
 
 const Notifies = () => {
   const userData = useUserDataStore.getState().userData;
   const userId = userData.id;
   const { notifications: socketNotifications } = useNotificationsSocket(userId);
   console.log(socketNotifications);
-  
 
   const formatTransactionDate = (dateString: string | number | Date) => {
     if (!dateString) return "No transaction date";
@@ -33,54 +33,43 @@ const Notifies = () => {
     return formatter.format(new Date(dateString));
   };
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
   const { data, isLoading, refetch } = useGetAllNotificationsQuery({
-    page: currentPage,
-    size: rowsPerPage,
+    page: 0,
+    size: 1000000,
   });
+
+  const [visibleCount, setVisibleCount] = useState(10);
+  const handleSeeMore = () => {
+    setVisibleCount((prev) => prev + 10);
+  };
 
   // Combine fetched and socket notifications
   const combinedNotifications = [
     ...(socketNotifications || []),
-    ...(data?.data.content || [])
+    ...(data?.data.content || []),
   ];
 
-  const onPageChange = (page: SetStateAction<number>) => {
-    setCurrentPage(page);
-  };
+  const { mutateAsync: readNotifi, isPending: isReading } =
+    usePutNotifiReadMutation({
+      onSuccess: () => {
+        toast.success(`Notification read`);
+        void refetch();
+      },
+      onError: () => {
+        toast.error("Failed to Read Notification");
+      },
+    });
 
-  const onElementChange = (ele: SetStateAction<number>) => {
-    setRowsPerPage(ele);
-    setCurrentPage(0);
-  };
-
-  const {
-    mutateAsync: readNotifi,
-    isPending: isReading,
-  } = usePutNotifiReadMutation({
-    onSuccess: () => {
-      toast.success(`Notification read`);
-      void refetch();
-    },
-    onError: () => {
-      toast.error("Failed to Read Notification");
-    }
-  });
-
-  const {
-    mutateAsync: deleteNotifi,
-    isPending: isDeleting,
-  } = useDeleteNotificationMutation({
-    onSuccess: () => {
-      toast.success(`Notification Deleted`);
-      void refetch();
-    },
-    onError: () => {
-      toast.error("Failed to Delete Notification");
-    }
-  });
+  const { mutateAsync: deleteNotifi, isPending: isDeleting } =
+    useDeleteNotificationMutation({
+      onSuccess: () => {
+        toast.success(`Notification Deleted`);
+        void refetch();
+      },
+      onError: () => {
+        toast.error("Failed to Delete Notification");
+      },
+    });
 
   const handleRead = async (id: string) => {
     await readNotifi(id);
@@ -89,6 +78,8 @@ const Notifies = () => {
   const handleDelete = async (id: string) => {
     await deleteNotifi(id);
   };
+
+  const visibleNotifications = combinedNotifications.slice(0, visibleCount);
 
   if (isLoading)
     return (
@@ -104,10 +95,10 @@ const Notifies = () => {
           <h1 className="text-[22px] font-semibold">Notifications</h1>
         </div>
 
-        {combinedNotifications.map((notifi: any, index: number) => (
+        {visibleNotifications.map((notifi: any, index: number) => (
           <div
             key={`${notifi.id}-${index}`}
-            className={`flex gap-2 ${notifi.read ? "bg-bgPrimary" : "bg-thead"} h-full w-[1000px] rounded-lg p-3 shadow-xl max-[1340px]:w-[700px] max-[1040px]:w-[500px] max-[550px]:w-[300px]`}
+            className={`flex gap-2 ${notifi.read ? "bg-bgPrimary" : "bg-thead"} h-full w-[1000px] rounded-lg p-3 shadow-xl dark:shadow-[0_0_22px_rgba(0,191,255,0.1)] max-[1340px]:w-[700px] max-[1040px]:w-[500px] max-[550px]:w-[300px]`}
           >
             <div>
               {notifi.picture == null ? (
@@ -203,16 +194,9 @@ const Notifies = () => {
             </div>
           </div>
         ))}
-
-        <div className="relative overflow-auto">
-          <Pagination
-            totalPages={data?.data.totalPagesCount}
-            elementsPerPage={rowsPerPage}
-            onChangeElementsPerPage={onElementChange}
-            currentPage={currentPage}
-            onChangePage={onPageChange}
-          />
-        </div>
+        {visibleCount < combinedNotifications.length && (
+          <SeeMoreButton onClick={handleSeeMore} />
+        )}
       </div>
     </Container>
   );

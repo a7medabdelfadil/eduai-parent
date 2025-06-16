@@ -24,7 +24,6 @@ import {
   useGetAllMaterials,
   useGetAllSchedule,
 } from "~/APIs/hooks/useHomeWork";
-import Spinner from "~/_components/Spinner";
 import useLanguageStore from "~/APIs/store";
 import { Skeleton } from "~/components/ui/Skeleton";
 
@@ -187,7 +186,7 @@ const Schedule = () => {
           value={selectedStudent ?? ""}
           onValueChange={setSelectedStudent}
         >
-          <SelectTrigger className="w-[250px] border border-[#f0efef] bg-bgPrimary">
+          <SelectTrigger className="w-[250px] border border-borderSecondary outline-none bg-bgPrimary">
             <SelectValue placeholder={t("selectStudent")} />
           </SelectTrigger>
           {students?.data?.length && (
@@ -205,7 +204,7 @@ const Schedule = () => {
         </Select>
       </div>
 
-      <div className="mb-4 flex w-full gap-10 max-[1080px]:grid">
+      <div className="mb-4 flex w-full gap-6 max-[1080px]:grid">
         <div className="flex overflow-auto md:overflow-visible">
           <CalendarDemo onDateSelect={setSelectedDate} />
         </div>
@@ -277,8 +276,8 @@ const Schedule = () => {
         </Box>
       </div>
 
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <div className="h-fit w-full rounded-xl bg-bgPrimary p-4 shadow lg:w-2/5 xl:w-1/3">
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="h-fit w-full rounded-xl bg-bgPrimary p-4 shadow lg:w-2/5">
           <Text font={"bold"} size={"xl"}>
             {t("todayAttendance")}
           </Text>
@@ -340,7 +339,7 @@ const Schedule = () => {
           </BoxGrid>
         </div>
 
-        <div className="grid h-full w-full gap-10">
+        <div className="grid h-full w-full gap-6">
           <div className="h-fit w-full rounded-xl bg-bgPrimary p-4 shadow">
             <Text font={"bold"} size={"xl"} className="mb-8">
               {t("todayMaterials")}
@@ -371,7 +370,7 @@ const Schedule = () => {
                   </div>
                 ))
               ) : (
-                <Text>{t("noMaterials")}</Text>
+                <Text color={"gray"} size={"lg"} font={"medium"} className="-mt-4">{t("noMaterials")}</Text>
               )}
             </div>
           </div>
@@ -414,7 +413,7 @@ const Schedule = () => {
                   </div>
                 ))
               ) : (
-                <Text>{t("noHomework")}</Text>
+                <Text  color={"gray"} size={"lg"} font={"medium"} className="-mt-4">{t("noHomework")}</Text>
               )}
             </div>
           </div>

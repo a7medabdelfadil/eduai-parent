@@ -145,14 +145,14 @@ const Complaint = () => {
       <Text font={"bold"} size={"4xl"}>
         {translate("Complaints", "Plaintes", "الشكاوى")}
       </Text>
-      <div className="border-b border-borderPrimary pb-4">
+      <div className="pb-4">
         {data?.data.content.map((compliant) => (
           <div
             key={compliant.id}
             className="mt-4 flex items-center justify-between rounded-xl border border-borderPrimary p-4"
           >
             <div className="flex gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
                 {compliant.approved ? (
                   <BsArrowUpRight size={30} className="text-success" />
                 ) : (
@@ -173,7 +173,6 @@ const Complaint = () => {
               </div>
             </div>
             <div className="mt-[2px]">
-              
             </div>
           </div>
         ))}

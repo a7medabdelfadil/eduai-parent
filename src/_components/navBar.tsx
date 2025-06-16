@@ -322,7 +322,7 @@ const NavBar = () => {
                       type="text"
                       id="icon"
                       name="icon"
-                      className="border-powderBlue block w-full rounded-lg border px-4 py-2 ps-11 text-lg outline-none focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50"
+                      className="border-powderBlue block w-full bg-bgPrimary rounded-lg border px-4 py-2 ps-11 text-lg outline-none focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50"
                       placeholder={
                         language === "ar"
                           ? "ابحث "

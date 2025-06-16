@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -10,19 +9,20 @@ import Input from "~/_components/Input";
 import { Text } from "~/_components/Text";
 import {
   useChangePassword,
-  useGetProfileUpdate,
   useProfile,
 } from "~/APIs/hooks/useProfile";
+import useLanguageStore from "~/APIs/store";
 import type { ChangePassword } from "~/types";
 
 const ChangePassword = () => {
   const router = useRouter();
   const { data, isLoading } = useProfile();
-  const {
-    data: dataUpdate,
-    isLoading: isLoadingdataUpdate,
-    refetch: refetchDataUpdate,
-  } = useGetProfileUpdate();
+
+  const language = useLanguageStore((state) => state.language);
+
+  const translate = (en: string, fr: string, ar: string) => {
+    return language === "fr" ? fr : language === "ar" ? ar : en;
+  };
 
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -31,7 +31,13 @@ const ChangePassword = () => {
   const { mutate: changePasswordMutation } = useChangePassword();
   const handleSubmit = () => {
     if (newPassword !== confirmNewPassword) {
-      toast.error("New password and confirm password must match.");
+      toast.error(
+        translate(
+          "New password and confirm password must match.",
+          "Le nouveau mot de passe et la confirmation doivent correspondre.",
+          "يجب أن تكون كلمة المرور الجديدة وتأكيدها متطابقتين.",
+        ),
+      );
       return;
     }
 
@@ -42,11 +48,23 @@ const ChangePassword = () => {
 
     changePasswordMutation(payload, {
       onSuccess: () => {
-        toast.success("Password changed successfully!");
+        toast.success(
+          translate(
+            "Password changed successfully!",
+            "Mot de passe modifié avec succès!",
+            "تم تغيير كلمة المرور بنجاح!",
+          ),
+        );
         router.push("/");
       },
       onError: () => {
-        toast.error("Failed to change password. Please try again.");
+        toast.error(
+          translate(
+            "Failed to change password. Please try again.",
+            "Échec de la modification du mot de passe. Veuillez réessayer.",
+            "فشل تغيير كلمة المرور. يرجى المحاولة مرة أخرى.",
+          ),
+        );
       },
     });
   };
@@ -54,13 +72,20 @@ const ChangePassword = () => {
   return (
     <>
       <Container>
-        <div className="w-full overflow-x-hidden rounded-xl bg-bgPrimary p-4">
+        <div
+          dir={language == "ar" ? "rtl" : "ltr"}
+          className="w-full overflow-x-hidden rounded-xl bg-bgPrimary p-4"
+        >
           <Text font={"bold"} size={"4xl"}>
-            Edit Profile
+            {translate(
+              "Edit Profile",
+              "Modifier le profil",
+              "تعديل الملف الشخصي",
+            )}
           </Text>
           <div className="mt-4 flex flex-col items-center">
             <div>
-            <img
+              <img
                 src={data?.data?.picture ?? "/images/userr.png"}
                 alt="Profile Photo"
                 width={100}
@@ -80,22 +105,44 @@ const ChangePassword = () => {
           <div className="m-auto w-4/5">
             <div className="flex flex-col gap-8 md:flex-row">
               <div>
-                <a href="/profile" className="text-xl">
-                  Personal Info.
+                <a
+                  href="/profile"
+                  className="text-xl hover:text-primary hover:underline"
+                >
+                  {translate(
+                    "Personal Info.",
+                    "Infos personnelles",
+                    "المعلومات الشخصية",
+                  )}
                 </a>
               </div>
               <div>
                 <a href="/password" className="text-xl text-primary underline">
-                  Change Password{" "}
+                  {translate(
+                    "Change Password",
+                    "Changer le mot de passe",
+                    "تغيير كلمة المرور",
+                  )}
                 </a>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor="current_password">Current Password</label>
+                <label htmlFor="current_password">
+                  {" "}
+                  {translate(
+                    "Current Password",
+                    "Mot de passe actuel",
+                    "كلمة المرور الحالية",
+                  )}
+                </label>
                 <Input
-                  placeholder="Enter current password"
+                  placeholder={translate(
+                    "Enter current password",
+                    "Entrez le mot de passe actuel",
+                    "أدخل كلمة المرور الحالية",
+                  )}
                   type="password"
                   id="current_password"
                   theme="transparent"
@@ -105,9 +152,20 @@ const ChangePassword = () => {
                 />
               </div>
               <div>
-                <label htmlFor="new_password">New Password</label>
+                <label htmlFor="new_password">
+                  {" "}
+                  {translate(
+                    "New Password",
+                    "Nouveau mot de passe",
+                    "كلمة المرور الجديدة",
+                  )}
+                </label>
                 <Input
-                  placeholder="Enter new password"
+                  placeholder={translate(
+                    "Enter new password",
+                    "Entrez un nouveau mot de passe",
+                    "أدخل كلمة مرور جديدة",
+                  )}
                   type="password"
                   id="new_password"
                   theme="transparent"
@@ -118,10 +176,18 @@ const ChangePassword = () => {
               </div>
               <div>
                 <label htmlFor="confirm_new_password">
-                  Confirm New Password
+                  {translate(
+                    "Confirm New Password",
+                    "Confirmez le nouveau mot de passe",
+                    "تأكيد كلمة المرور الجديدة",
+                  )}
                 </label>
                 <Input
-                  placeholder="Confirm the password"
+                  placeholder={translate(
+                    "Confirm the password",
+                    "Confirmez le mot de passe",
+                    "أكد كلمة المرور",
+                  )}
                   type="password"
                   id="confirm_new_password"
                   theme="transparent"
@@ -137,7 +203,11 @@ const ChangePassword = () => {
                   className="rounded-lg bg-primary px-6 py-2 text-white"
                   onClick={handleSubmit}
                 >
-                  Save Changes
+                  {translate(
+                    "Save Changes",
+                    "Enregistrer les modifications",
+                    "حفظ التغييرات",
+                  )}
                 </Button>
               </div>
             </div>

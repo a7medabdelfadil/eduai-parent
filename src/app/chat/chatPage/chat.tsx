@@ -5,10 +5,10 @@ import { Client, type IMessage } from "@stomp/stompjs";
 import Cookies from "js-cookie";
 import { useEffect, useRef, useState } from "react";
 import { MessageBubble } from "~/_components/MessageBubble";
-import Link from "next/link";
 import { toast } from "react-toastify";
 import { baseUrlStock } from "~/APIs/axios";
 import { useUserDataStore } from "~/APIs/store";
+import { RiSendPlaneFill } from "react-icons/ri";
 
 interface Message {
   chatId: number | string;
@@ -233,7 +233,7 @@ const userData = useUserDataStore.getState().userData;
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div className="mx-auto flex h-[700px] w-full flex-col rounded-xl bg-bgPrimary">
+    <div className="mx-auto flex h-[calc(100vh-90px)] w-full flex-col bg-bgPrimary">
       <div className="relative inline-block p-4">
         <div className="flex items-center gap-2 font-medium">
           <img src="/images/userr.png" alt="#" className="w-[50px] h-[50px]" />
@@ -241,7 +241,7 @@ const userData = useUserDataStore.getState().userData;
         </div>
         
       </div>
-      <div className="flex-1 overflow-y-auto break-words rounded-xl bg-bgPrimary p-4">
+      <div className="flex-1 overflow-y-auto break-words bg-bgSecondary p-4">
         {isLoading && (
           <div className="flex h-full items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
@@ -344,7 +344,7 @@ const userData = useUserDataStore.getState().userData;
 
           <input
             type="text"
-            className="flex-1 rounded-lg p-2 focus:outline-none"
+            className="flex-1 rounded-lg p-2 bg-bgPrimary focus:outline-none"
             value={input}
             placeholder="Type your message..."
             onChange={e => setInput(e.target.value)}
@@ -355,23 +355,11 @@ const userData = useUserDataStore.getState().userData;
             }}
           />
           <button
-            className="ml-4 flex items-center gap-3 rounded-lg bg-[#ffead1] dark:bg-blue-900 px-2 py-1 font-semibold text-black hover:bg-[#dfbd90] hover:dark:bg-blue-700 dark:text-white"
+            className="ml-4 flex items-center gap-3 rounded-lg text-white bg-[#3E5AF0] dark:bg-blue-900 px-2 py-1 font-semibold hover:bg-blue-700 hover:dark:bg-blue-700"
             onClick={handleSendMessage}
           >
             Send
-            <svg
-              className="h-5 w-5 text-black dark:text-white"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-              <path d="M21 3L14.5 21a.55 .55 0 0 1 -1 0L10 14L3 10.5a.55 .55 0 0 1 0 -1L21 3" />
-            </svg>
+            <RiSendPlaneFill size={20} />
           </button>
         </div>
       </div>
