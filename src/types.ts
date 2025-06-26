@@ -397,6 +397,7 @@ export interface Comment {
   isEdited: boolean;
   isLiked: boolean;
   likesCount: number;
+  isMine: boolean;
 }
 
 export interface PostCommentRequest {
@@ -791,4 +792,34 @@ export type AcademicYearResponse = {
   data: AcademicYear[];
 };
 
+export interface ParentStudentPayload {
+  username: string;
+  email: string;
+  password: string;
+  nid: string;
+  gender: "MALE" | "FEMALE";
+  birthDate: string;
+  name_en: string;
+  name_ar: string;
+  name_fr?: string;
+  about?: string;
+  relationshipToStudent: string;
+  studyLevel: string;
+  eduSystemId: number;
+  hasScholarship: 0 | 1;
+  language: "ARABIC" | "ENGLISH" | "FRENCH";
+  department: string;
+  subDepartment?: string;
+}
 
+export interface CreateParentStudentRequest {
+  studentIdPhoto: File;
+  studentProfilePhoto: File;
+  studentCertificatesOfAchievement?: File[];
+  request: ParentStudentPayload;
+}
+
+export interface ParentStudentResponse {
+  id: number;
+  message: string;
+}

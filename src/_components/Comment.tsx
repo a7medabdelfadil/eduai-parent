@@ -20,6 +20,7 @@ const Comment = ({
   refetchComments,
   isLiked,
   likesCount,
+  isMine,
 }: {
   userName: string;
   comment: string;
@@ -29,6 +30,7 @@ const Comment = ({
   commentId: number;
   isLiked: boolean;
   likesCount: number;
+  isMine: boolean;
   refetchComments: () => void;
 }) => {
   const [currentComment, setCurrentComment] = useState(comment);
@@ -73,18 +75,6 @@ const Comment = ({
     setIsEditing(false);
   };
 
-  // Handle like button click
-  // const handleLikeClick = () => {
-  //   likeComment(
-  //     { postId, commentId, comment: currentComment },
-  //     {
-  //       onError: () => {
-  //         // If an error occurs, reset the like state and count
-  //         console.error('Error liking the comment');
-  //       }
-  //     }
-  //   );
-  // };
   const handleLikeClick = () => {
     likeComment(
       { postId, commentId, liked: !isLiked }, // Toggle like/unlike state
@@ -122,13 +112,13 @@ const Comment = ({
     <div className="mb-4 flex">
       <div className="mr-4">
         <ImageComponent
-        fallbackSrc="/images/noImage.png"
-        priority={true}
+          fallbackSrc="/images/noImage.png"
+          priority={true}
           src={imageUrl}
           alt="Profile Photo"
-          className="rounded-full w-[60px] h-[60px]"
-          width={60}
-          height={60}
+          className="h-[40px] w-[40px] rounded-full"
+          width={40}
+          height={40}
         />
       </div>
       <div>
@@ -145,34 +135,36 @@ const Comment = ({
               <Text>{currentComment}</Text>
             )}
           </div>
-          <div className="relative mt-1 cursor-pointer" ref={menuRef}>
-            {isEditing ? (
-              <button onClick={handleSaveComment}>Save</button>
-            ) : (
-              <FaEllipsisV
-                size={18}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              />
-            )}
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-32 rounded border border-borderPrimary bg-bgPrimary shadow-lg">
-                <ul>
-                  <li
-                    className="cursor-pointer px-4 py-2 hover:bg-bgSecondary"
-                    onClick={handleEditClick}
-                  >
-                    Edit
-                  </li>
-                  <li
-                    className="cursor-pointer px-4 py-2 hover:bg-bgSecondary"
-                    onClick={handleDeleteClick}
-                  >
-                    Delete
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
+          {isMine && (
+            <div className="relative mt-1 cursor-pointer" ref={menuRef}>
+              {isEditing ? (
+                <button onClick={handleSaveComment}>Save</button>
+              ) : (
+                <FaEllipsisV
+                  size={18}
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                />
+              )}
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-32 rounded border border-borderPrimary bg-bgPrimary shadow-lg">
+                  <ul>
+                    <li
+                      className="cursor-pointer px-4 py-2 hover:bg-bgSecondary"
+                      onClick={handleEditClick}
+                    >
+                      Edit
+                    </li>
+                    <li
+                      className="cursor-pointer px-4 py-2 hover:bg-bgSecondary"
+                      onClick={handleDeleteClick}
+                    >
+                      Delete
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="mx-4 flex gap-4 text-[14px] text-textSecondary">
           <div>{time}</div>

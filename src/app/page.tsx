@@ -81,7 +81,6 @@ export default function Home() {
 
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [comment, setComment] = useState("");
-  console.log(comment);
   const { mutate: sendComment } = useCreateComment();
 
   const [todayEvents, setTodayEvents] = useState<CustomEvent[]>([]);
@@ -128,14 +127,14 @@ export default function Home() {
     page: 0,
     size: 10,
   });
+  console.log("🚀 ~ Home ~ comments:", comments);
 
-  console.log(comments);
   const {
     data: dataPosts,
     refetch,
     isLoading,
   } = useGetAllPosts({ page: 0, size: 10 });
-  console.log("dataPosts", dataPosts);
+
   const { mutate: likePost } = useLikePost();
 
   const handleLikeClick = (postId: number, liked: boolean) => {
@@ -254,6 +253,9 @@ export default function Home() {
                                 onError={(error) =>
                                   console.error("Image failed to load:", error)
                                 }
+                                loadingPlaceholder={
+                                  <Skeleton className="h-full w-full" />
+                                }
                               />
                             </div>
                           ))}
@@ -333,6 +335,7 @@ export default function Home() {
                               commentId={comment.id}
                               isLiked={comment.isLiked}
                               likesCount={comment.likesCount}
+                              isMine={comment.isMine}
                             />
                           ))}
 

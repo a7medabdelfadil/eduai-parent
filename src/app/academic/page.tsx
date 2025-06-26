@@ -23,6 +23,7 @@ import {
   useGetAllHomeWorks,
   useGetAllMaterials,
   useGetAllSchedule,
+  useGetSessionMaterials,
 } from "~/APIs/hooks/useHomeWork";
 import useLanguageStore from "~/APIs/store";
 import { Skeleton } from "~/components/ui/Skeleton";
@@ -56,15 +57,18 @@ const Schedule = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | undefined>(
     undefined,
   );
+  const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
+    undefined,
+  );
+
   const { data: students, isLoading: isStudents } = useGetAllStudents();
 
   const formattedDate = React.useMemo(
     () => format(selectedDate, "yyyy-MM-dd"),
     [selectedDate],
   );
-  console.log("👾 ~ Schedule ~ formattedDate:", formattedDate)
 
-  const language = useLanguageStore((state) => state.language);
+  const language = useLanguageStore((state) => state.language); // en - ar - fr
 
   const t = (key: string) => {
     const translations: Record<string, Record<string, string>> = {
@@ -172,6 +176,8 @@ const Schedule = () => {
   );
   const { data: attendanceSumm } = useGetAllAttendancesSumm(selectedStudent);
   const { data: schedule } = useGetAllSchedule(selectedStudent, formattedDate);
+  const { data: sessionMaterials, isLoading: isSessionMaterials } =
+    useGetSessionMaterials(selectedSessionId, selectedStudent);
 
   useEffect(() => {
     if (students?.data?.length && !selectedStudent) {
@@ -186,7 +192,7 @@ const Schedule = () => {
           value={selectedStudent ?? ""}
           onValueChange={setSelectedStudent}
         >
-          <SelectTrigger className="w-[250px] border border-borderSecondary outline-none bg-bgPrimary">
+          <SelectTrigger className="w-[250px] border border-borderSecondary bg-bgPrimary outline-none">
             <SelectValue placeholder={t("selectStudent")} />
           </SelectTrigger>
           {students?.data?.length && (
@@ -229,19 +235,25 @@ const Schedule = () => {
                 <th scope="col" className="whitespace-nowrap px-6 py-3">
                   {t("day")}
                 </th>
+                <th scope="col" className="whitespace-nowrap px-6 py-3">
+                  Select
+                </th>
               </tr>
             </thead>
             <tbody className="rounded-lg">
               {schedule?.data?.length
-                ? schedule.data.map((item: any) => (
+                ? schedule.data.map((item: any, index: number) => (
                     <tr
                       key={item.id}
-                      className="bg-bgSecondary font-semibold transition hover:bg-primary hover:text-white"
+                      className={`font-semibold transition ${
+                        selectedSessionId === item.id
+                          ? "bg-primary text-white"
+                          : index % 2 === 0
+                            ? "bg-[#F7F7F7] dark:bg-[#1E1E1E]"
+                            : "bg-[#FCFCFC] dark:bg-[#151515]"
+                      }`}
                     >
-                      <th
-                        scope="row"
-                        className="whitespace-nowrap rounded-s-2xl px-6 py-4 font-medium"
-                      >
+                      <th className="whitespace-nowrap rounded-s-2xl px-6 py-4 font-medium">
                         {item.courseName}
                       </th>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -250,13 +262,28 @@ const Schedule = () => {
                       <td className="whitespace-nowrap px-6 py-4">
                         {item.startTime} - {item.endTime}
                       </td>
-                      <td className="whitespace-nowrap rounded-e-2xl px-6 py-4">
+                      <td className="whitespace-nowrap px-6 py-4">
                         {item.day}
+                      </td>
+                      <td className="whitespace-nowrap rounded-e-2xl px-6 py-4">
+                        <button
+                          onClick={() => setSelectedSessionId(item.id)}
+                          className={`rounded-md border px-3 py-1 transition ${
+                            selectedSessionId === item.id
+                              ? "border-white text-white hover:bg-white hover:text-primary"
+                              : "border-primary text-primary hover:bg-primary hover:text-white"
+                          }`}
+                        >
+                          Select
+                        </button>
                       </td>
                     </tr>
                   ))
                 : [...Array(3)].map((_, i) => (
                     <tr key={i} className="bg-bgSecondary">
+                      <td className="px-6 py-4">
+                        <Skeleton className="h-4 w-full" />
+                      </td>
                       <td className="px-6 py-4">
                         <Skeleton className="h-4 w-full" />
                       </td>
@@ -345,32 +372,46 @@ const Schedule = () => {
               {t("todayMaterials")}
             </Text>
             <div>
-              {isMaterials ? (
-                  <div className="mt-4 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-12 w-full rounded-xl" />
-                  </div>
-              ) : materials?.data?.content?.length ? (
-                materials.data?.content?.map((material: any, index: number) => (
+              {!selectedSessionId ? (
+                <Text color="gray" size="lg" font="medium">
+                  Please select a class to view its materials.
+                </Text>
+              ) : isSessionMaterials ? (
+                <div className="mt-4 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-20 w-full rounded-xl" />
+                </div>
+              ) : sessionMaterials?.data?.length ? (
+                sessionMaterials.data.map((material: any, index: number) => (
                   <div key={index} className="mt-4">
-                    <Text size={"xl"} className="mb-2">
-                      {material.courseName}
+                    <Text size="xl" className="mb-2">
+                      {material.title}
                     </Text>
-                    <div className="flex rounded-xl border border-borderPrimary p-2">
-                      <PiLineVertical
-                        size={125}
-                        className="-ml-12 text-primary"
-                      />
-                      <div className="-ml-10 mt-2 w-[90%]">
-                        <Text size={"xl"}>{material.courseName}</Text>
-                        <Text size={"md"}>{material.startTime}</Text>
-                        <Text size={"md"}>{material.endTime}</Text>
+                    <div className="rounded-xl border border-borderPrimary p-4">
+                      <div className="flex gap-3">
+                        <div className="w-1 rounded-full bg-primary" />
+                        <div className="flex flex-col gap-2">
+                          <Text font="medium" size="xl">
+                            {material.title}
+                          </Text>
+                          <Text color="gray">{material.description}</Text>
+                          <a
+                            href={material.fileLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-primary underline"
+                          >
+                            Open File
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <Text color={"gray"} size={"lg"} font={"medium"} className="-mt-4">{t("noMaterials")}</Text>
+                <Text color="gray" size="lg" font="medium">
+                  {t("noMaterials")}
+                </Text>
               )}
             </div>
           </div>
@@ -381,10 +422,10 @@ const Schedule = () => {
             </Text>
             <div>
               {isHomeworksLoading ? (
-                  <div className="mt-4 space-y-2">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-12 w-full rounded-xl" />
-                  </div>
+                <div className="mt-4 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
               ) : homeworks?.data?.content?.length ? (
                 homeworks.data?.content?.map((homework: any, index: number) => (
                   <div key={homework.id} className={index > 0 ? "mt-4" : ""}>
@@ -413,7 +454,14 @@ const Schedule = () => {
                   </div>
                 ))
               ) : (
-                <Text  color={"gray"} size={"lg"} font={"medium"} className="-mt-4">{t("noHomework")}</Text>
+                <Text
+                  color={"gray"}
+                  size={"lg"}
+                  font={"medium"}
+                  className="-mt-4"
+                >
+                  {t("noHomework")}
+                </Text>
               )}
             </div>
           </div>
